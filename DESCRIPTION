@@ -1,0 +1,39 @@
+Package: HDElliptical
+Type: Package
+Title: High-Dimensional Methods for Elliptically Symmetric Distributions
+Version: 0.1.0
+Authors@R: person(
+    given = "Long",
+    family = "Feng",
+    email = "flnankai@nankai.edu.cn",
+    role = c("aut", "cre")
+  )
+Description: Fast, documented implementations of robust estimation, testing,
+    dimension reduction, classification, and clustering methods for
+    high-dimensional elliptically symmetric data. Computational kernels use
+    'Rcpp' and 'RcppArmadillo'. The package follows the methods developed and
+    reviewed in the book "High-Dimensional Data Analysis for Elliptically
+    Symmetric Distributions".
+License: MIT + file LICENSE
+URL: https://github.com/flnankai/HDElliptical
+BugReports: https://github.com/flnankai/HDElliptical/issues
+Depends:
+    R (>= 4.2.0)
+Imports:
+    mvtnorm,
+    Rcpp,
+    stats
+LinkingTo:
+    Rcpp,
+    RcppArmadillo
+Suggests:
+    knitr,
+    rmarkdown,
+    testthat (>= 3.0.0)
+VignetteBuilder: knitr
+Config/testthat/edition: 3
+Encoding: UTF-8
+NeedsCompilation: yes
+SystemRequirements: C++17
+Roxygen: list(markdown = TRUE)
+RoxygenNote: 7.3.3

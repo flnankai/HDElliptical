@@ -1,0 +1,187 @@
+---
+title: "Chapter 2: Location Tests"
+output: rmarkdown::html_vignette
+vignette: >
+  %\VignetteIndexEntry{Chapter 2: Location Tests}
+  %\VignetteEngine{knitr::rmarkdown}
+  %\VignetteEncoding{UTF-8}
+---
+
+```{r setup, include = FALSE}
+knitr::opts_chunk$set(collapse = TRUE, comment = "#>")
+```
+
+`HDElliptical` keeps low-dimensional reference tests, robust sign/rank tests,
+and high-dimensional mean tests behind a common `htest`-compatible interface.
+Rows are observations and columns are variables. Every method also returns the
+raw formula components and numerical diagnostics needed to audit its
+calibration.
+
+## A reproducible sample
+
+The following correlated Gaussian samples are deliberately small enough for
+the classical Hotelling tests. The same interfaces continue to work for the
+high-dimensional procedures when the number of variables exceeds the sample
+size, subject to each method's assumptions.
+
+```{r data}
+library(HDElliptical)
+
+set.seed(20260814)
+p <- 8
+shape <- toeplitz(0.45^(0:(p - 1)))
+x <- relliptical(40, rep(0.10, p), shape)
+y <- relliptical(44, c(rep(0.10, 3), rep(0, p - 3)), shape)
+colnames(x) <- colnames(y) <- paste0("V", seq_len(p))
+```
+
+## Fixed-dimensional reference procedures
+
+The one- and two-sample Hotelling statistics use exact (F) calibration and
+therefore require nonsingular covariance estimates and the corresponding
+positive residual degrees of freedom. The sign and rank tests use asymptotic
+chi-squared calibration. They fail explicitly when the empirical directional
+moment matrix is singular; no pseudoinverse is substituted.
+
+```{r classical-tests}
+classical <- list(
+  Hotelling.one = hotelling_one_sample_test(x),
+  Hotelling.two = hotelling_two_sample_test(x, y),
+  Sign.one = spatial_sign_test(x),
+  Signed.rank.one = spatial_signed_rank_test(x),
+  Spatial.rank.two = spatial_rank_test(x, y)
+)
+
+data.frame(
+  method = names(classical),
+  statistic = vapply(classical, function(z) unname(z$statistic), numeric(1)),
+  p.value = vapply(classical, function(z) z$p.value, numeric(1)),
+  row.names = NULL
+)
+```
+
+The signed-rank implementation includes the Hoeffding-projection factor
+(1/4) required by the score definition used in the book. The pooled
+two-sample spatial-rank covariance uses the sample-covariance divisor
+(N-1).
+
+## High-dimensional quadratic and diagonal procedures
+
+The first high-dimensional block contains one-sample diagonal tests and
+two-sample Euclidean or diagonal tests. Their normal calibrations are all
+right-tailed because large nonnegative quadratic signal is evidence against
+the vector null, even though the scientific alternative is conventionally
+described as two-sided.
+
+```{r high-dimensional-tests}
+high_dimensional <- list(
+  Srivastava.Du = srivastava_du_one_sample_test(x),
+  Park.Ayyala = park_ayyala_one_sample_test(x),
+  Bai.Saranadasa = bai_saranadasa_two_sample_test(x, y),
+  Chen.Qin = chen_qin_two_sample_test(x, y),
+  Srivastava.Katayama.Kano =
+    srivastava_katayama_kano_two_sample_test(x, y)
+)
+
+data.frame(
+  method = names(high_dimensional),
+  Z = vapply(high_dimensional, function(z) unname(z$statistic), numeric(1)),
+  p.value = vapply(high_dimensional, function(z) z$p.value, numeric(1)),
+  row.names = NULL
+)
+```
+
+The original common-covariance Bai--Saranadasa statistic and the
+unequal-covariance Chen--Qin U-statistic are separate functions. This matters
+in finite samples: the expression labelled as Bai--Saranadasa in the current
+book draft is algebraically the Chen--Qin numerator. Park--Ayyala and
+Chen--Qin expose their leave-out sums in `components`, while internally scaled
+copies protect the standardized statistic from overflow or underflow.
+
+The scale-invariant unequal-covariance Behrens--Fisher method uses
+leave-four-out within-group and two-plus-two leaveout cross traces. A compact
+example keeps vignette build time modest:
+
+```{r behrens-fisher}
+set.seed(2411)
+x.bf <- matrix(rnorm(8 * 7), 8, 7)
+y.bf <- matrix(rnorm(9 * 7, 0.15), 9, 7)
+bf <- feng_zou_wang_zhu_two_sample_test(x.bf, y.bf)
+c(Z = unname(bf$statistic), p.value = bf$p.value)
+```
+
+## Precision-adjusted maximum testing
+
+The Cai--Liu--Xia interface requires the precision source to be stated
+explicitly. An oracle population precision uses its diagonal in the
+denominator. A supplied feasible estimate instead uses empirical within-group
+variances after transforming both samples. The adaptive path estimates the
+precision by entrywise adaptive thresholding and then follows the feasible
+path.
+
+```{r clx}
+clx_adaptive <- cai_liu_xia_two_sample_test(x, y)
+clx_oracle <- cai_liu_xia_two_sample_test(
+  x, y, precision = solve(shape), precision_source = "oracle"
+)
+
+c(
+  adaptive.G = unname(clx_adaptive$statistic),
+  adaptive.p = clx_adaptive$p.value,
+  oracle.G = unname(clx_oracle$statistic),
+  oracle.p = clx_oracle$p.value
+)
+
+clx_adaptive$diagnostics$denominator.source
+clx_adaptive$components$maximum.coordinate
+```
+
+The reported CLX statistic is
+
+\[
+G=M-2\log(p)+\log\{\log(p)\},
+\]
+
+with the type-I extreme-value calibration. Any eigenvalue adjustment made by
+the adaptive precision backend is recorded in
+`diagnostics$adaptive.thresholding`; setting `eigen_floor = 0` prohibits that
+adjustment and turns a non-positive thresholded eigenvalue into an error.
+
+## High-dimensional sign tests
+
+The Wang--Peng--Li function uses raw spatial signs and the paper's literal
+leave-two-out variance estimator. The two-sample tINST function combines
+inverse-norm signs with observation-specific leave-one-out diagonal and
+location fits. The Feng--Sun function uses pair-specific leave-two-out joint
+location/diagonal fits for scalar-invariant one-sample inference. All return
+the published variance components and explicit degeneracy diagnostics.
+
+```{r high-dimensional-signs}
+wpl <- wang_peng_li_one_sample_test(x)
+
+set.seed(2608)
+x.fs <- matrix(rt(8 * 6, df = 5), 8, 6)
+fs <- feng_sun_one_sample_test(x.fs, tol = 1e-6)
+
+set.seed(25101)
+x.sign <- matrix(rnorm(8 * 3), 8, 3)
+y.sign <- matrix(rnorm(11 * 3, 0.2), 11, 3)
+tinst <- tinst_two_sample_test(
+  x.sign, y.sign, tol = 1e-7, max_iter = 2000
+)
+
+c(WPL.p = wpl$p.value, FengSun.p = fs$p.value, tINST.p = tinst$p.value)
+tinst$diagnostics[c("iteration.stable", "score.residual")]
+```
+
+For tINST, `iteration.stable` follows the relative-update stopping convention
+used to operationalize the paper's iteration. `score.residual` is retained as
+a separate diagnostic and is not represented as an equation-root certificate.
+
+## Failure policy
+
+The package does not silently repair a singular covariance, a non-positive
+leave-out variance, or an unconverged precision estimate. Such inputs produce
+an informative error. This is intentional: adding a ridge, taking an absolute
+value, or using a generalized inverse changes the named statistical method
+and its reference law.

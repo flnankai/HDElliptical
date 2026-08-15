@@ -1,0 +1,850 @@
+#' \documentclass[article,nojss]{jss}
+#' 
+#' \usepackage{amsmath,array,lmodern}
+#' 
+#' \newcommand{\class}[1]{`\code{#1}'}
+#' \newcommand{\fct}[1]{\code{\detokenize{#1}()}}
+#' \newcolumntype{L}[1]{>{\raggedright\arraybackslash}p{#1}}
+#' 
+## ----preliminaries, echo=FALSE, results='hide', warning=FALSE, message=FALSE----
+suppressWarnings(knitr::render_sweave())
+options(prompt = "R> ", continue = "+  ", width = 70,
+  useFancyQuotes = FALSE)
+library("HDElliptical")
+stopifnot(packageVersion("HDElliptical") >= package_version("0.1.0"))
+set.seed(20260814)
+
+#' 
+#' \author{Long Feng\\Nankai University}
+#' \Plainauthor{Long Feng}
+#' 
+#' \title{\pkg{HDElliptical}: Reproducible High-Dimensional Methods for
+#'   Elliptically Symmetric Distributions}
+#' \Plaintitle{HDElliptical: Reproducible High-Dimensional Methods for
+#'   Elliptically Symmetric Distributions}
+#' \Shorttitle{\pkg{HDElliptical}: High-Dimensional Elliptical Methods}
+#' 
+#' \Abstract{
+#'   Elliptically symmetric models retain a tractable location--shape structure
+#'   while allowing radial distributions substantially heavier tailed than the
+#'   multivariate Gaussian distribution. The \pkg{HDElliptical} package provides
+#'   a unified \proglang{R} interface and compiled \proglang{C++} kernels for
+#'   robust estimation, high-dimensional testing, dimension reduction,
+#'   classification, and clustering under elliptical symmetry. The implementation
+#'   is organized around spatial signs, spatial ranks, angular shape estimators,
+#'   and explicit finite-sample diagnostics. Every public method is mapped in a
+#'   dated source ledger to a primary reference or an explicit source boundary,
+#'   and is tested against an independent formula implementation, invariance
+#'   property, or published numerical result. This article describes
+#'   the statistical architecture, implementation choices, validation strategy,
+#'   and reproducible workflows supplied by the package.
+#' }
+#' 
+#' \Keywords{elliptical symmetry, high-dimensional inference, spatial sign,
+#'   spatial rank, robust statistics, \proglang{R}, \proglang{C++}}
+#' \Plainkeywords{elliptical symmetry, high-dimensional inference, spatial sign,
+#'   spatial rank, robust statistics, R, C++}
+#' 
+#' \Address{
+#'   Long Feng\\
+#'   Nankai University\\
+#'   Tianjin, China\\
+#'   E-mail: \email{flnankai@nankai.edu.cn}
+#' }
+#' 
+#' \begin{document}
+#' 
+#' \section{Introduction} \label{sec:introduction}
+#' 
+#' Many high-dimensional procedures are designed around Gaussian observations,
+#' although empirical data often exhibit outliers, heavy tails, or unstable radial
+#' magnitudes. Elliptically symmetric distributions separate direction from
+#' radius and therefore provide a broad model in which robust angular procedures
+#' remain interpretable. Classical multivariate sign and rank methods are reviewed
+#' by \citet{Oja2010}; distribution-free scatter estimation is represented by the
+#' Tyler estimator \citep{Tyler1987}; and modern high-dimensional component
+#' analysis based on pairwise directions is developed by \citet{HanLiu2018}.
+#' 
+#' The goal of \pkg{HDElliptical} \citep{HDElliptical} is not to expose a
+#' collection of unrelated code
+#' fragments. It supplies common conventions, diagnostics, compiled kernels, and
+#' reproducibility tests for the methods developed and reviewed in
+#' \citet{FengBook2026}. Rows always represent observations, columns represent
+#' variables, and exact zero directions use $U(0)=0$. The package distinguishes
+#' oracle from feasible procedures and never silently replaces a singular system
+#' by a generalized inverse when that substitution changes the named method.
+#' 
+#' This article makes four contributions in \proglang{R} \citep{R}. First, it
+#' describes a reusable
+#' directional foundation for later high-dimensional methods. Second, it presents
+#' a consistent software interface for estimators and tests. Third, it documents
+#' the numerical safeguards used in the \proglang{Rcpp}/\proglang{RcppArmadillo}
+#' kernels \citep{EddelbuettelFrancois2011,EddelbuettelSanderson2014}. Fourth, it
+#' provides formula-level and invariance-based validation that can be reproduced
+#' from the package source.
+#' 
+#' \section{Statistical and software architecture} \label{sec:architecture}
+#' 
+#' An elliptical random vector admits the representation
+#' %
+#' \begin{equation} \label{eq:elliptical-representation}
+#' X = \mu + \xi A U, \qquad A A^\top = \Sigma,
+#' \end{equation}
+#' %
+#' where $U$ is uniform on the unit sphere and is independent of the nonnegative
+#' radius $\xi$. The matrix $\Sigma$ is a shape or scatter matrix, identified only
+#' up to scale unless a radial normalization is imposed. This representation
+#' motivates the software layers in Table~\ref{tab:layers}.
+#' 
+#' \begin{table}[t!]
+#' \centering
+#' \begin{tabular}{@{}L{0.21\linewidth}L{0.50\linewidth}L{0.22\linewidth}@{}}
+#' \hline
+#' Layer & Representative functions & Role \\ \hline
+#' Directional primitives & \fct{spatial_sign}, \fct{spatial_rank} & Remove radial magnitude \\
+#' Location and shape & \fct{spatial_median}, \fct{tyler_shape} & Robust estimation \\
+#' Joint estimation & \fct{hr_estimator} & Affine-equivariant location--shape \\
+#' Classical tests & \fct{hotelling_one_sample_test} & Reference calibration \\
+#' High-dimensional tests & \fct{chen_qin_two_sample_test}, \fct{cai_liu_xia_two_sample_test} & Scalable inference \\
+#' Learning methods & Classification, reduction, clustering & Downstream analysis \\ \hline
+#' \end{tabular}
+#' \caption{\label{tab:layers} Package layers and representative public
+#' interfaces. The table is updated only when a module passes documentation,
+#' formula, invariance, and package-check gates.}
+#' \end{table}
+#' 
+#' Computational kernels operate on dense numeric matrices and return both the
+#' estimate and diagnostics. User-facing wrappers attach variable names, preserve
+#' the conventional \class{htest} contract where appropriate, and state the
+#' calibration assumptions. Estimators whose contract is a defining equation are
+#' declared converged only when its residual is below tolerance.  When a source
+#' paper specifies only fixed-point update stability, the package labels that
+#' quantity `iteration.stable` and reports the score residual separately rather
+#' than presenting a small step as an equation-root certificate.
+#' 
+#' \section{Directional foundations} \label{sec:foundations}
+#' 
+#' For $x \ne 0$, the spatial sign is $U(x)=x/\lVert x\rVert_2$. The spatial
+#' median minimizes the average Euclidean distance and solves a subgradient
+#' equation. The package uses a modified Weiszfeld iteration, including the
+#' coincident-observation case, and reports its final equation residual.
+#' 
+#' The following example changes the radial distribution without changing the
+#' target shape in Equation~\ref{eq:elliptical-representation}.
+#' %
+## ----foundation-example---------------------------------------------
+shape <- matrix(c(2, 0.5, 0, 0.5, 1, 0.2, 0, 0.2, 0.7), 3)
+x <- relliptical(250, location = c(1, -1, 0.5), shape = shape,
+  radial = function(n) abs(rt(n, df = 3)))
+center_spatial <- spatial_median(x)
+shape_kendall <- spatial_kendall(x)
+shape_tyler <- tyler_shape(x)
+c(median_residual = attr(center_spatial, "equation_residual"),
+  tyler_residual = attr(shape_tyler, "equation_residual"),
+  kendall_trace = sum(diag(shape_kendall)))
+
+#' %
+#' The Tyler estimator is trace normalized. Its default sample-mean center
+#' preserves affine equivariance; a spatial-median center is available as a robust
+#' but only orthogonally equivariant alternative. When both location and shape are
+#' required, \fct{hr_estimator} solves the Hettmansperger--Randles equations jointly
+#' \citep{HettmanspergerRandles2002}.
+#' %
+## ----hr-example-----------------------------------------------------
+fit_hr <- hr_estimator(x)
+c(location = fit_hr$location_equation_residual,
+  shape = fit_hr$shape_equation_residual)
+
+#' 
+#' \section{High-dimensional inference} \label{sec:inference}
+#' \subsection{Location tests} \label{sec:location-tests}
+#' 
+#' Low-dimensional Hotelling tests are included as calibrated reference methods
+#' \citep{Hotelling1931}. Their covariance systems are solved by Cholesky
+#' factorization; singular or numerically ill-conditioned covariance matrices
+#' produce an error because a pseudoinverse would invalidate the exact $F$
+#' distribution. High-dimensional modules use statistics whose assumptions permit
+#' $p$ to be comparable to or larger than $n$.
+#' %
+## ----hotelling-example----------------------------------------------
+x0 <- matrix(rnorm(240), 80, 3)
+hotelling_fit <- hotelling_one_sample_test(x0)
+c(F = unname(hotelling_fit$statistic),
+  p_value = hotelling_fit$p.value,
+  reciprocal_condition = hotelling_fit$diagnostics$rcond)
+
+#' %
+#' The first high-dimensional block implements the Srivastava--Du one-sample
+#' diagonal test \citep{SrivastavaDu2008}, the Park--Ayyala leave-two-out test
+#' \citep{ParkAyyala2013}, the original common-covariance Bai--Saranadasa test
+#' \citep{BaiSaranadasa1996}, the unequal-covariance Chen--Qin U-statistic
+#' \citep{ChenQin2010}, and the Srivastava--Katayama--Kano diagonal test
+#' \citep{SrivastavaKatayamaKano2013}.  These are separate interfaces because
+#' their covariance assumptions and finite-sample normalizers are not
+#' interchangeable.  In particular, the expression labelled Bai--Saranadasa in
+#' the current book draft equals the Chen--Qin numerator rather than the original
+#' pooled-covariance statistic.
+#' The scale-invariant Behrens--Fisher interface of
+#' \citet{FengZouWangZhu2015BF} separately handles unequal covariance matrices
+#' with the paper's leave-four-out and two-plus-two leaveout trace estimates.
+#' The Composite $T^2$ procedure of \citet{FengZouWangZhu2017CT2} is kept as a
+#' different common-covariance method: it rebuilds correlation-selected blocks
+#' inside every leaveout term and uses the paper's first-sample trace
+#' calibration.  This distinction prevents a method described only briefly in
+#' the book from being mislabeled as a Behrens--Fisher combination test.
+#' %
+## ----high-dimensional-example---------------------------------------
+p_hd <- 20
+shape_hd <- toeplitz(0.4^(0:(p_hd - 1)))
+x_hd <- relliptical(30, rep(0.08, p_hd), shape_hd)
+y_hd <- relliptical(34, rep(0, p_hd), shape_hd)
+fits_hd <- list(
+  SD = srivastava_du_one_sample_test(x_hd),
+  PA = park_ayyala_one_sample_test(x_hd),
+  BS = bai_saranadasa_two_sample_test(x_hd, y_hd),
+  CQ = chen_qin_two_sample_test(x_hd, y_hd),
+  SKK = srivastava_katayama_kano_two_sample_test(x_hd, y_hd)
+)
+vapply(fits_hd, function(z) z$p.value, numeric(1))
+
+#' %
+#' Because the feasible Behrens--Fisher trace calculation is combinatorial, a
+#' small example is used here while the compiled kernel avoids dense $p$ by $p$
+#' matrices.
+#' %
+## ----behrens-fisher-example-----------------------------------------
+set.seed(2411)
+x_bf <- matrix(rnorm(8 * 7), 8, 7)
+y_bf <- matrix(rnorm(9 * 7, 0.15), 9, 7)
+fit_bf <- feng_zou_wang_zhu_two_sample_test(x_bf, y_bf)
+c(Z = unname(fit_bf$statistic), p_value = fit_bf$p.value)
+
+#' %
+#' The combinatorial Composite $T^2$ example is deliberately tiny so that the
+#' article remains quick to rebuild.
+#' %
+## ----composite-t2-example-------------------------------------------
+set.seed(2717)
+x_ct2 <- matrix(rnorm(21), 7, 3)
+y_ct2 <- matrix(rnorm(15, 0.2), 5, 3)
+fit_ct2 <- composite_t2_two_sample_test(x_ct2, y_ct2)
+c(Z = unname(fit_ct2$statistic), p_value = fit_ct2$p.value)
+
+#' %
+#' The Cai--Liu--Xia maximum test targets sparse alternatives after precision
+#' adjustment \citep{CaiLiuXia2014}.  Its interface requires the user to identify
+#' an oracle population precision, a supplied feasible estimate, or the bundled
+#' adaptive-threshold estimate.  The distinction changes the denominator: an
+#' oracle uses the precision diagonal, whereas both feasible paths use empirical
+#' within-group variances of the transformed samples with divisors $n_1$ and
+#' $n_2$.
+#' %
+## ----clx-example----------------------------------------------------
+fit_clx <- cai_liu_xia_two_sample_test(x_hd, y_hd)
+c(G = unname(fit_clx$statistic), p_value = fit_clx$p.value)
+fit_clx$components$maximum.coordinate
+fit_clx$diagnostics$denominator.source
+
+#' %
+#' The analytical adaptive sum-of-powers test of \citet{XuLinWeiPan2016}
+#' combines odd, even, and maximum score families.  The package makes an
+#' otherwise easy-to-miss definition choice explicit: the primary paper raises
+#' raw sample-mean differences to finite powers, whereas the book raises
+#' inverse-variance-standardized coordinates.  The default reproduces the
+#' paper, and \code{score\_scale = "book\_studentized"} selects the scale-invariant
+#' book variant.  Both paths use deterministic Gaussian and extreme-value
+#' calibration; no paper-specific simulation grid is required.
+#' %
+## ----aspu-example---------------------------------------------------
+fit_aspu <- xu_lin_wei_pan_aspu_test(x_hd, y_hd)
+fit_aspu_book <- xu_lin_wei_pan_aspu_test(
+  x_hd, y_hd, score_scale = "book_studentized")
+c(paper_raw = fit_aspu$p.value,
+  book_studentized = fit_aspu_book$p.value)
+
+#' %
+#' For heavy-tailed elliptical observations, the package also provides the raw
+#' spatial-sign test of \citet{WangPengLi2015}, the one-sample inverse-norm test
+#' of \citet{FengLiuMa2021INST}, and the two-sample inverse-norm sign test (tINST)
+#' of \citet{HuangLiuZhouFeng2023TwoSampleINST}.  The Feng--Sun scalar-invariant
+#' test \citep{FengSun2016} supplies pair-specific leave-two-out diagonal
+#' standardization, while the multivariate-sign test of
+#' \citet{FengZouWang2016JASA} uses crossed leave-one-out locations and its
+#' Proposition~2 feasible trace calibration.  The simpler Li--Wang--Zou SST
+#' \citep{LiWangZou2016SimpleTwoSample} instead uses two full-sample diagonal HR
+#' fits and an explicit bias correction.  The high-dimensional spatial-rank test
+#' of \citet{FengZhangLiu2020SpatialRank} supplies a different pairwise-rank
+#' construction and feasible leave-four/leave-two trace calibration.  WPL uses
+#' the paper's literal leave-two-out variance estimator.  INST keeps endpoint
+#' signs centered at the null and uses the supplement's direct $2n^{-4}$
+#' variance.  tINST exposes all leave-one-out nuisance fits and separates
+#' iteration stability from the reported score residual; none of these functions
+#' silently perturbs a zero residual or repairs a non-positive variance.
+#' %
+## ----high-dimensional-sign-example----------------------------------
+fit_wpl <- wang_peng_li_one_sample_test(x_hd)
+set.seed(2608)
+x_fs <- matrix(rt(8 * 6, df = 5), 8, 6)
+fit_fs <- feng_sun_one_sample_test(x_fs, tol = 1e-6)
+set.seed(2021)
+x_inst <- matrix(rt(40, df = 5), 10, 4)
+fit_inst <- inst_one_sample_test(x_inst, tol = 1e-6)
+set.seed(25101)
+x_sign <- matrix(rnorm(8 * 3), 8, 3)
+y_sign <- matrix(rnorm(11 * 3, 0.2), 11, 3)
+fit_fzw <- feng_zou_wang_two_sample_sign_test(
+  x_sign, y_sign, tol = 1e-6, max_iter = 2000)
+fit_lwz <- li_wang_zou_two_sample_sign_test(
+  x_sign, y_sign, tol = 1e-6, max_iter = 2000)
+fit_rank <- feng_zhang_liu_spatial_rank_test(
+  x_sign, y_sign, tol = 1e-6, max_iter = 2000)
+fit_tinst <- tinst_two_sample_test(x_sign, y_sign,
+  tol = 1e-7, max_iter = 2000)
+c(WPL = fit_wpl$p.value, FengSun = fit_fs$p.value,
+  INST = fit_inst$p.value, FZW = fit_fzw$p.value,
+  LWZ = fit_lwz$p.value, FZLrank = fit_rank$p.value,
+  tINST = fit_tinst$p.value)
+fit_tinst$diagnostics[c("iteration.stable", "relative.update",
+  "convergence.basis", "regularization")]
+
+#' %
+#' The scaled-spatial-median MAX and MAXSUM procedures of
+#' \citet{LiuFengZhaoWang2025MaxsumLocation} use a Gumbel sparse component and
+#' combine it with the Feng--Sun SUM component through a numerically stable
+#' Cauchy tail.  The general-$m$ extension of
+#' \citet{YanZhaoFeng2025InverseNormMaxsum} is exposed separately; its $m=-1$
+#' SUM path is locked component by component to the INST implementation.  The
+#' rank procedures of \citet{ZhangFeng2024AdaptiveMean} implement the paper's
+#' maximum, squared-rank sum, and equal-weight Cauchy combination.  They do not
+#' invent the general rank-$L_q$ family attributed to that paper in the current
+#' book draft.  A SUM or combined call requires a supplied positive long-run
+#' variance, as below, or an explicitly lagged Ouyang--Parzen estimator
+#' \citep{OuyangLiuTongXu2022Rank}; no automatic bandwidth is hidden in the API.
+#' %
+## ----maxsum-rank-example--------------------------------------------
+x_max <- matrix(c(
+  -2, -1, 0, 1, 2, 3, 1, -1,
+  -1, 2, 1, -2, 3, 0, -2, 1,
+  1, 0, -1, 2, -2, 1, 3, -1
+), 8, 3)
+fit_ssmax <- spatial_sign_maxsum_test(x_max, tol = 1e-6)
+fit_weighted_max <- yan_zhao_feng_weighted_max_test(
+  x_max, m = 0, tol = 1e-6)
+x_rank <- matrix(c(
+  -4, -1, 2, 5, -2, 3, -5, 1, 1, -4,
+  3, -6, 3, 5, -1, 2, 6, -2, 7, -3
+), 5, byrow = TRUE)
+fit_rank_adaptive <- zhang_feng_rank_one_sample_test(
+  x_rank, component = "combined", tau_sq = 1)
+c(spatial_MAXSUM = fit_ssmax$p.value,
+  weighted_MAX = fit_weighted_max$p.value,
+  rank_combined = fit_rank_adaptive$p.value)
+
+#' %
+#' For every method, raw components are retained so published formulae can be
+#' checked independently of the final normal, chi-squared, or extreme-value
+#' calibration. Weighted-sign, rank, projection, and adaptive max--sum procedures
+#' use the same explicit component and failure contract.
+#' 
+#' The formula-complete general radial-weight extension exposes separate
+#' weighted-estimator and explicitly oracle-score interfaces. The first applies
+#' weights only to the location equation while retaining the unweighted diagonal
+#' HR update. The second requires a supplied reference location and diagonal
+#' shape; it returns a calibrated \(p\) value only when the caller also supplies
+#' \code{null_sd} or both \code{nu2} and \code{trace_R2}. It never guesses a
+#' feasible leave-out plug-in \citep{FengLiuMa2021INST}. The executable chunk
+#' below records both exact API names.
+#' %
+## ----generic-weighted-location--------------------------------------
+weighted_x <- matrix(c(
+  -2, 1, 0, 3, -1, 2, 1, -3, 2, 0, 4, -2
+), ncol = 2)
+fit_weighted_hr <- generic_weighted_hr_location(
+  weighted_x, K = "constant", tol = 1e-6)
+fit_weighted_oracle <- oracle_weighted_sign_sum_test(
+  weighted_x, theta = c(0, 0), diagonal = c(1, 1),
+  K = "power", power = -1)
+c(converged = fit_weighted_hr$diagnostics$converged,
+  raw_score = unname(fit_weighted_oracle$statistic),
+  calibrated = fit_weighted_oracle$calibrated)
+
+#' %
+#' An \proglang{R} callback is evaluated on one radius at a time. Zero radii,
+#' non-finite weights, non-positive denominators, and non-convergence are errors;
+#' neither interface floors, caps, changes a sign, or returns a repaired iterate.
+#' 
+#' \subsection{Matrix estimation and testing} \label{sec:matrix-tests}
+#' 
+#' Chapter~3 separates Gaussian covariance procedures from angular methods whose
+#' targets remain meaningful under heavy-tailed elliptical radial laws. Its 35
+#' public interfaces cover likelihood and sphericity tests, covariance thresholding
+#' and POET reconstruction, sign and rank shape tests, precision estimation,
+#' tensor graphical models, shrinkage, high-dimensional HR estimation, and
+#' elliptical factor reconstruction. Tyler and Kendall operators reuse the
+#' certified directional foundations \citep{Tyler1987,HanLiu2018}; the sign-based
+#' sphericity statistic follows \citet{ZouPengFengWang2014Sphericity}. Solver
+#' residuals, positive-definiteness checks, support thresholds, and any required
+#' factor count are returned rather than repaired silently.
+#' %
+## ----matrix-workflow------------------------------------------------
+matrix_data <- matrix(c(
+  -2, -1,  0,
+  -1,  0,  1,
+   0,  1, -1,
+   1, -1,  2,
+   2,  0, -2,
+  -1,  2,  0,
+   1,  1,  1,
+   2, -2,  1
+), ncol = 3, byrow = TRUE)
+fit_mauchly <- mauchly_sphericity_test(matrix_data)
+fit_sign_shape <- spatial_sign_sphericity_test(matrix_data)
+c(Gaussian = fit_mauchly$p.value,
+  spatial_sign = fit_sign_shape$p.value)
+
+#' %
+#' The fixed matrix makes the workflow auditable without treating a generated
+#' Monte Carlo sample as data. The two tests have different null assumptions and
+#' are therefore not interchangeable robustness options.
+#' 
+#' Three Gaussian precision programs have separate certified APIs:
+#' \fct{ec2_covariance} solves the correlation-scale convex EC2 branch,
+#' \fct{gaussian_graphical_lasso} penalizes only off-diagonal precision entries,
+#' and \fct{clime_precision} certifies every raw CLIME column before the primary
+#' smaller-absolute-value symmetrization
+#' \citep{LiuWangZhao2014EC2,YuanLin2007,FriedmanHastieTibshirani2008,
+#' CaiLiuLuo2011CLIME}. They are not aliases for the elliptical SCLIME/SGLASSO
+#' interfaces.
+#' %
+## ----gaussian-precision-workflow------------------------------------
+fit_ec2 <- ec2_covariance(
+  matrix_data, lambda = 0.15, tau = 0.05)
+fit_glasso <- gaussian_graphical_lasso(
+  matrix_data, lambda = 0.1)
+fit_clime <- clime_precision(
+  matrix_data, lambda = 0.2)
+c(EC2 = fit_ec2$valid,
+  graphical_lasso = fit_glasso$valid,
+  CLIME = fit_clime$valid)
+
+#' %
+#' Every estimate above is returned only after its feasibility, positive-
+#' definiteness where required, and KKT certificates pass. With
+#' \code{strict = FALSE}, a failed solver warns and returns
+#' \code{estimate = NULL} and \code{valid = FALSE}, retaining only the
+#' uncertified last iterate in diagnostics; it never promotes that iterate to a
+#' repaired estimate.
+#' 
+#' \subsection{Other high-dimensional tests} \label{sec:other-tests}
+#' 
+#' Chapter~4 exposes 28 interfaces across unconditional and conditional alpha
+#' tests, change-point detection, white-noise tests, radial--directional
+#' diagnostics, and several independence problems. The data-adaptive
+#' high-dimensional change-point method is described by
+#' \citet{WangFeng2023JRSSBChangePoint}, while max--sum panel independence is
+#' developed by \citet{LongJiangLiuXiong2022PanelIndep}. Permutation, multiplier,
+#' or Gaussian-process draws are retained only when they define a method's own
+#' reference distribution; each such interface uses an explicit local seed and
+#' restores the caller's random-number state.
+#' %
+## ----other-tests-workflow-------------------------------------------
+series <- c(-0.4, 0.2, -0.2, 0.3, 0, -0.1,
+  1.2, 0.8, 1.1, 0.9, 1.3, 1)
+companion <- c(0.3, -0.7, 0.4, 0.2, -0.1, 0.6,
+  0.8, -0.2, 0.5, -0.5, 0.1, -0.4)
+fit_cusum <- classical_cusum_test(
+  series, trim = 2, calibration = "asymptotic")
+fit_wilks <- gaussian_wilks_independence_test(
+  matrix(series, ncol = 1), matrix(companion, ncol = 1))
+c(CUSUM = fit_cusum$p.value, Wilks = fit_wilks$p.value)
+
+#' %
+#' These baseline calls have analytical calibrations and contain no generated
+#' reference sample. More elaborate Chapter~4 interfaces preserve the same
+#' explicit-calibration and no-repair contract.
+#' 
+#' The completion layer separates five contracts that the shorter review had
+#' previously obscured: a supplied-score general-\(K\) oracle, the feasible
+#' inverse-norm endpoint of \citet{ZhaoChenZi2022INSTAlpha}, a book-only Gaussian
+#' alpha Cauchy benchmark with supplied correlation trace, a supplied-estimate
+#' conditional Wald benchmark, and the exact Hoeffding \(D\), BKR \(R\), and
+#' tau-star vector-U kernels of \citet{WangLiuFeng2026VectorIndep}. The executable
+#' chunk begins with a named map of all five public APIs and then exercises the
+#' last two contracts.
+#' %
+## ----chapter4-completion-workflow-----------------------------------
+chapter4_completion_apis <- c(
+  weighted_oracle = "weighted_spatial_sign_alpha_oracle_test",
+  inverse_norm = "zhao_chen_zi_inst_alpha_test",
+  book_gaussian = "book_gaussian_alpha_cauchy_test",
+  conditional_wald = "conditional_factor_wald_test",
+  vector_u = "wang_liu_feng_vector_u_independence_test")
+chapter4_completion_apis
+u_x <- cbind(
+  c(1, 4, 2, 7, 3, 6, 5),
+  c(7, 2, 5, 1, 6, 3, 4))
+u_y <- cbind(c(2, 7, 4, 1, 6, 3, 5))
+fit_vector_u <- wang_liu_feng_vector_u_independence_test(
+  u_x, u_y, measure = "tau_star", B = 7, seed = 11,
+  max_kernel_evaluations = 20000)
+fit_conditional_wald <- conditional_factor_wald_test(
+  c(0.1, -0.2), diag(c(1, 2)), sample_size = 40)
+c(vector_U = fit_vector_u$p.value,
+  conditional_Wald = fit_conditional_wald$p.value)
+
+#' %
+#' The exact high-order U-statistic routine stops before drawing permutations
+#' when the explicit workload
+#' \[
+#'   (B+1)pq\binom{n}{m}m!
+#' \]
+#' exceeds its limit; it does not substitute an incomplete-U approximation or
+#' claim scalability. The
+#' distinct mutual-independence max--sum studentization remains one of the two
+#' source-blocked ledger entries.
+#' 
+#' \section{Classification} \label{sec:classification}
+#' 
+#' Chapter~5 supplies 23 exported interfaces for classical and oracle LDA/QDA,
+#' FAIR and sparse linear rules, sparse QDA, spatial-sign classifiers, and robust
+#' generalized QDA. Classical multivariate discrimination follows the covariance
+#' and prior conventions summarized by \citet{Anderson2003}; the spatial-sign
+#' direct sparse LDA formulation is due to \citet{ZhuangFeng2025SSLDA}. Every
+#' classifier returns the class-level order, score orientation, tuning path, and
+#' solver certificate. An invalid or uncertified fit cannot be passed to
+#' \code{predict()}, and no pseudoinverse, eigenvalue floor, or nearest-positive-
+#' definite repair is inserted.
+#' %
+## ----classification-workflow----------------------------------------
+training_x <- matrix(c(
+  -3, -2, -2, -1, -2, -3, -1, -2,
+   1,  2,  2,  1,  2,  3,  3,  2
+), ncol = 2, byrow = TRUE)
+training_y <- factor(rep(c("A", "B"), each = 4))
+fit_lda <- classical_lda_classifier(training_x, training_y)
+new_x <- matrix(c(-2, -2, 0, 0, 2, 2), ncol = 2, byrow = TRUE)
+data.frame(
+  class = predict(fit_lda, new_x),
+  score = predict(fit_lda, new_x, type = "score")
+)
+
+#' %
+#' The tied zero score is resolved by the documented first-level rule. Sparse and
+#' robust classifiers keep the same prediction contract while exposing their
+#' additional feasibility and convergence diagnostics.
+#' 
+#' \section{Dimension reduction} \label{sec:reduction}
+#' 
+#' Chapter~6 provides 16 reusable interfaces in four modules. Classical PCA, CCA,
+#' Bartlett testing, robust factor subspaces, RTS factors, and factor-number
+#' selection use explicit centering, divisors, ranks, and eigengap rules
+#' \citep{Anderson2003,Hotelling1936}. Spatial-sign, Kendall, and generalized-sign
+#' PCA distinguish their radial and cutoff conventions. Sparse PCA/CCA routines
+#' report support, \(\ell_1\) boundaries, deflation, and KKT or Fantope residuals.
+#' Finally, the primary metric-lasso \fct{sscca} implementation of
+#' \citet{QianLiuFeng2025SparseCCA} is kept distinct from the book's whitened-PMD
+#' \fct{sign_whitened_sparse_cca} summary; neither interface invents a hidden
+#' whitening or pseudoinverse repair.
+#' %
+## ----reduction-workflow---------------------------------------------
+fit_pca <- classical_pca(matrix_data, components = 2)
+fit_sign_pca <- spatial_sign_pca(matrix_data, rank = 2)
+rbind(
+  classical = fit_pca$eigenvalues[seq_len(2)],
+  spatial_sign = fit_sign_pca$eigenvalues[seq_len(2)]
+)
+
+#' %
+#' The eigenvalues are on different operator scales, so the example compares
+#' workflow and reported rank rather than asserting numerical equality.
+#' 
+#' \section{Clustering} \label{sec:clustering}
+#' 
+#' Chapter~7 exposes 12 reusable interfaces backed by 13 registered compiled
+#' kernels. The classical block contains Lloyd iteration \citep{Lloyd1982} and
+#' full-covariance Gaussian-mixture EM \citep{FraleyRaftery2002}; empty clusters,
+#' initial states, ties, covariance rank, and SPD failures are explicit. Sparse
+#' K-means and K-medians retain feature-selection and gap calibration from
+#' \citet{WittenTibshirani2010Clustering}. CHIME
+#' \citep{CaiMaZhang2019} canonicalizes component labels after the initial state
+#' and every update so that \(\omega \leq 1/2\), with coherent means,
+#' responsibilities, discriminant orientation, scores, and history. IF-PCA
+#' \citep{JinWang2016IFPCA} exposes its KS/HCT scale and null calibration.
+#' K-spatial medians, SM-SSCM, Sparse-SM, and its two selectors implement explicit
+#' active-set, empty-cluster, cycle, and final-state contracts; the sparse
+#' K-spatial-median method is described by
+#' \citet{ZhaoZhuangFeng2026SparseKSM}.
+#' %
+## ----clustering-workflow--------------------------------------------
+cluster_data <- matrix(c(
+  -3, -2, -2, -3, -2, -1, -1, -2,
+   2,  1,  1,  2,  2,  3,  3,  2
+), ncol = 2, byrow = TRUE)
+fit_lloyd <- lloyd_kmeans(
+  cluster_data, clusters = 2, initial = c(1L, 5L))
+fit_kspatial <- k_spatial_median(
+  cluster_data, K = 2, init = c(1L, 5L))
+data.frame(
+  Lloyd = unname(fit_lloyd$cluster),
+  K_spatial = fit_kspatial$labels
+)
+c(Lloyd = fit_lloyd$converged,
+  K_spatial = fit_kspatial$diagnostics$converged)
+
+#' %
+#' Selector permutations and IF-PCA empirical-null draws are intrinsic method
+#' calibrations, not paper size/power simulations. They accept fixed inputs or an
+#' explicit local seed and isolate the caller's random-number state.
+#' 
+#' Semiparametric elliptical mixture clustering is now fitted by
+#' \fct{semc_fit}. The certified S3 method \code{predict.semc_fit()} handles
+#' prediction, and \fct{semc_select_k_gap} selects the cluster count.
+#' The implementation is an independent rewrite of the primary formulas
+#' \citep{FengZhuang2026SEMC}; the pinned
+#' \pkg{GEMcluster} commit is an MIT-licensed contract and fixed-fixture oracle,
+#' not copied source \citep{GEMcluster2026}. Initialization, damping,
+#' generator/KDE/spline choices, POET/Tyler/glasso tuning, every numerical
+#' boundary, and all stopping and SPD certificates are explicit.
+#' 
+#' The following fixed example spells out every fit control, including controls
+#' irrelevant to the selected Tyler branch, so that no software default is hidden.
+#' %
+## ----semc-workflow--------------------------------------------------
+semc_x <- matrix(c(
+  -3, -2, -2, -3, -2, -1, -1, -2, -2.5, -2, -1.5, -2.2,
+   3,  2,  2,  3,  2,  1,  1,  2,  2.5,  2,  1.5,  2.2
+), ncol = 2L, byrow = TRUE)
+semc_labels <- rep(1:2, each = 6L)
+semc_control <- list(
+  shape = "tyler", initialization = "labels",
+  initial_labels = semc_labels, initial_centers = NULL,
+  first_index = 1L, init_tau = 0, init_tau_grid = NULL, init_B = 2L,
+  init_nstart = 1L, init_max_iter = 20L,
+  init_empty_action = "error", init_empty_active = "error",
+  init_dispersion_floor = 1e-8, outer_nstart = 1L,
+  eta_mu = 0.7, eta_precision = 0.7,
+  mixing_floor = 1e-10, center_weight_floor = 1e-10,
+  max_iter = 10L, convergence_tol = 0.2,
+  bandwidth = 0.2, bandwidth_min = 0.05,
+  generator_grid_size = 40L, generator_radius_floor = 1e-4,
+  generator_density_floor = 1e-10,
+  generator_score_clip = c(1e-3, 50),
+  generator_spline_spar = 0.55,
+  generator_extrapolation = "constant", radial_floor = 1e-6,
+  poet_factor_selection = "supplied", poet_factors = 0L,
+  poet_max_factors = 0L, factor_ratio_floor = 1e-8,
+  poet_threshold = 0.1, poet_threshold_scale = 0.55,
+  poet_ridge = 0.05, tyler_ridge = 0.1,
+  tyler_tol = 1e-5, tyler_max_iter = 200L,
+  glasso_lambda = NULL, glasso_lambda_grid = NULL,
+  glasso_lambda_scale = 0.28, glasso_ebic_gamma = 0.5,
+  glasso_tol = 1e-6, glasso_max_iter = 10000L,
+  glasso_initial_step = 1, glasso_max_backtracking = 100L,
+  glasso_majorization_tol = 1e-12,
+  spd_tol = 0, symmetry_tol = 1e-10,
+  strict = TRUE, keep_path = FALSE)
+semc_model <- do.call(semc_fit, c(
+  list(x = semc_x, K = 2L, seed = 11L), semc_control))
+semc_plan <- array(NA_integer_, c(12L, 2L, 2L))
+semc_plan[, 1, 1] <- 12:1
+semc_plan[, 2, 1] <- c(7:12, 1:6)
+semc_plan[, 1, 2] <- c(2:12, 1)
+semc_plan[, 2, 2] <- c(12, 1:11)
+semc_gap <- semc_select_k_gap(
+  semc_x, k_grid = 2L, B = 2L, control = semc_control,
+  dispersion = "paper_hard_log1p", rule = "lse",
+  permutation_indices = semc_plan, seed = 19L,
+  dispersion_floor = 1e-12, keep_reference_fits = FALSE,
+  keep_permutations = FALSE)
+c(valid = semc_model$valid, selected_K = semc_gap$selected.k)
+head(predict(semc_model))
+
+#' %
+#' The selector default shown above is the paper's hard-label
+#' \(\operatorname{mean}\{\log(1+\delta)\}\) Gap-LSE rule. The pinned software's
+#' posterior-weighted soft-delta dispersion is available only by explicitly
+#' selecting \code{dispersion = "software_soft_delta"}. Invalid or uncertified
+#' fits are never accepted by \code{predict()}.
+#' 
+#' \section{Numerical implementation} \label{sec:implementation}
+#' 
+#' The compiled implementation uses stable Euclidean norms, raw-first pairwise
+#' differences, and scaled matrix symmetrization. A common-scale subtraction
+#' fallback is used only when the direct finite-input difference overflows; this
+#' preserves close, large coordinates rather than turning them into ties.
+#' Quadratic forms use factorizations rather than explicit inverses, and metric
+#' clustering evaluates distances through Cholesky roots with scaled accumulation.
+#' Trace calculations switch between primal and dual Gram matrices so a method
+#' need not allocate a dense $p$ by $p$ matrix when $p \gg n$.
+#' 
+#' Zero tolerances default to exact-zero detection. A fixed positive threshold
+#' would otherwise destroy scale equivariance when a complete data set is
+#' rescaled. Users can supply a positive tolerance when measurement resolution,
+#' rather than mathematical scale equivariance, defines equality.
+#' 
+#' \section{Verification and reproducibility} \label{sec:verification}
+#' 
+#' A method is marked implemented only after the following checks are present:
+#' an independent direct formula calculation, a relevant invariance property, a
+#' degenerate-input contract, extreme-scale regression tests where needed, and a
+#' compact comparison with an independent implementation when one is legally
+#' available. Author code under an incompatible or unspecified license is used
+#' only as a numerical oracle; it is not copied into the package.
+#' 
+#' The verification materials report fixed seeds for property tests, package
+#' versions, compiler information, and tolerances. The package intentionally does
+#' not reproduce the many Monte Carlo size/power experiments from its source
+#' papers. Its reproducibility target is the method implementation itself:
+#' formula components, software contracts, and numerically stable callable APIs.
+#' 
+#' At the dated 2026-08-15 Chapter~1--7 release gate, all package-level validation
+#' targets in Table~\ref{tab:release-snapshot} were satisfied.
+#' %
+#' \begin{table}[t!]
+#' \centering
+#' \begin{tabular}{@{}lr@{}}
+#' \hline
+#' Release artifact & Count \\ \hline
+#' Exported interfaces & 176 \\
+#' Registered native \code{.Call} routines & 140 \\
+#' \code{Rd} help topics & 223 \\
+#' Test files & 56 \\
+#' Named test blocks & 688 \\
+#' Passing runtime assertions & 6,267 \\
+#' Stable generated-file manifest & 226 \\
+#' Source-blocked method families & 2 \\ \hline
+#' \end{tabular}
+#' \caption{\label{tab:release-snapshot} Audited release snapshot for
+#' \pkg{HDElliptical} version 0.1.0.}
+#' \end{table}
+#' %
+#' A fresh Windows source build, all examples, both vignettes, and all tests
+#' completed successfully. The final \code{R CMD check --no-manual} had zero
+#' errors and warnings; its single note was the conservative DLL symbol scan for
+#' \code{_exit}, \code{abort}, and \code{exit}, which the checker states may come
+#' from linked libraries rather than an actual call.
+#' 
+#' \subsection{Deterministic chapter benchmarks} \label{sec:benchmarks}
+#' 
+#' The release benchmark harness records one callable workflow per chapter on
+#' fixed inputs. It performs five measured batches after one warm-up, increases
+#' calls per batch until at least 0.05 seconds elapse, and divides elapsed time by
+#' the batch size. Table~\ref{tab:benchmarks} reports the machine-local medians;
+#' every repeated result fingerprint was identical.
+#' %
+#' \begin{table}[t!]
+#' \centering
+#' \begin{tabular}{@{}clr@{}}
+#' \hline
+#' Chapter & Workflow & Median seconds per call \\ \hline
+#' 1 & \fct{spatial_median} & 0.00171875 \\
+#' 2 & \fct{chen_qin_two_sample_test} & 0.0075 \\
+#' 3 & \fct{poet_covariance} & 0.003125 \\
+#' 4 & \fct{classical_cusum_test} & 0.00046875 \\
+#' 5 & \fct{classical_lda_classifier} & 0.0003125 \\
+#' 6 & \fct{classical_pca} & 0.003125 \\
+#' 7 & \fct{lloyd_kmeans} & 0.0009375 \\ \hline
+#' \end{tabular}
+#' \caption{\label{tab:benchmarks} Deterministic descriptive benchmark medians
+#' from the release CSV and report under \code{output/benchmarks}.}
+#' \end{table}
+#' %
+#' These timings are not a performance guarantee and do not reproduce a paper
+#' simulation, size/power experiment, or empirical table. The CSV retains
+#' minimum/maximum times, batch sizes, package and platform metadata, and result
+#' fingerprints; the companion report records the measurement protocol.
+#' 
+#' \subsection{Practical scope} \label{sec:performance}
+#' 
+#' The article is organized around user workflows, method selection, arguments,
+#' return objects, diagnostics, and computational complexity. Representative
+#' fixed examples show how the major Chapter~1--7 families are called, while the
+#' 223 help topics document every exported interface. Paper-specific simulation
+#' grids, null-size tables, and power curves are outside the scope of both the
+#' package and the article; duplicating them would obscure the practical software
+#' interface and create a large maintenance burden unrelated to method
+#' correctness.
+#' 
+#' \section{Summary and discussion} \label{sec:summary}
+#' 
+#' \pkg{HDElliptical} version 0.1.0 turns a broad literature on elliptical
+#' high-dimensional analysis into a traceable software system spanning seven book
+#' chapters. The central design decisions are a shared directional foundation,
+#' explicit calibration metadata, compiled kernels for computational bottlenecks,
+#' and verification against defining equations rather than output snapshots alone.
+#' The implementation ledger records the exact book and primary source for each
+#' public method. Exactly two source-blocked entries remain: the Chapter~2
+#' structured-correlation location combinations and the Chapter~4
+#' mutual-independence max--sum studentization. Review-only branches remain
+#' separately labelled rather than becoming guessed algorithms; SEMC is now
+#' implemented with explicit paper, software-contract, and provenance layers.
+#' 
+#' \section*{Computational details}
+#' 
+#' The results in this article were obtained using
+#' \proglang{R}~\Sexpr{as.character(getRversion())} and
+#' \pkg{HDElliptical}~\Sexpr{packageVersion("HDElliptical")}.
+#' \proglang{R} and contributed packages are available from the Comprehensive
+#' \proglang{R} Archive Network at \url{https://CRAN.R-project.org/}.
+#' 
+#' \bibliography{refs}
+#' 
+#' \newpage
+#' \begin{appendix}
+#' 
+#' \section{Replication checklist} \label{app:replication}
+#' 
+#' The submission materials contain the package source, this \code{.Rnw}
+#' manuscript, its tangled standalone \proglang{R} script, the bibliography, the
+#' inline fixed example inputs, the rendered PDF, and build instructions. Running
+#' the script executes every displayed workflow in manuscript order. No
+#' paper-specific simulation artifact, size/power grid, or empirical results table
+#' is part of the submission.
+#' %
+## ----session-information--------------------------------------------
+sessionInfo()
+
+#' 
+#' \clearpage
+#' 
+#' \section{Method traceability} \label{app:traceability}
+#' 
+#' The package source contains a dated method-coverage ledger and a separate book
+#' errata ledger. These records distinguish book notation, primary-paper formulae,
+#' public interfaces, compiled kernels, and verification tests.
+#' %
+#' \begin{table}[!htbp]
+#' \centering
+#' \small
+#' \begin{tabular}{@{}cL{0.25\linewidth}L{0.35\linewidth}L{0.24\linewidth}@{}}
+#' \hline
+#' Chapter & Method families & Representative interfaces & Release state \\ \hline
+#' 1 & Directional foundations, location and shape &
+#'   \fct{spatial_sign}, \fct{tyler_shape} & Implemented \\
+#' 2 & Classical and high-dimensional location tests &
+#'   \fct{spatial_sign_test}, \fct{inst_one_sample_test} &
+#'   Generic weighted/oracle complete; structured correlation blocked \\
+#' 3 & Covariance, shape, precision and factor methods &
+#'   \fct{ec2_covariance}, \fct{clime_precision} &
+#'   Implemented; 35 public interfaces with certified Gaussian programs \\
+#' 4 & Alpha, change-point, white-noise and independence tests &
+#'   \fct{grs_alpha_test}, \fct{classical_cusum_test} &
+#'   28 interfaces including completion; mutual studentization blocked \\
+#' 5 & Classical, sparse and robust classification &
+#'   \fct{fair_classifier}, \fct{sslda} &
+#'   Implemented; 23 public interfaces \\
+#' 6 & Classical, robust and sparse dimension reduction &
+#'   \fct{classical_pca}, \fct{sscca} &
+#'   Implemented; 16 public interfaces in four modules \\
+#' 7 & Classical, sparse and robust clustering &
+#'   \fct{semc_fit}, \fct{semc_select_k_gap} &
+#'   Implemented; 12 interfaces and 13 kernels, including SEMC \\ \hline
+#' \end{tabular}
+#' \caption{\label{tab:traceability} Compact Chapter~1--7 release mapping. The
+#' dated source ledger supplies the complete API, primary-reference, kernel, and
+#' verification mapping.}
+#' \end{table}
+#' 
+#' \end{appendix}
+#' 
+#' \end{document}

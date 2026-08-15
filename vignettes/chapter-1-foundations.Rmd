@@ -1,0 +1,95 @@
+---
+title: "Chapter 1: Robust Directional Foundations"
+output: rmarkdown::html_vignette
+vignette: >
+  %\VignetteIndexEntry{Chapter 1: Robust Directional Foundations}
+  %\VignetteEngine{knitr::rmarkdown}
+  %\VignetteEncoding{UTF-8}
+---
+
+```{r setup, include = FALSE}
+knitr::opts_chunk$set(collapse = TRUE, comment = "#>")
+```
+
+The foundation functions in `HDElliptical` use observations in rows and
+variables in columns. They separate radial magnitude from angular information,
+which is the central computational advantage of spatial-sign methods under
+heavy tails.
+
+## Simulating an elliptical sample
+
+The stochastic representation is
+
+\[
+X = \mu + \xi A U, \qquad AA^\top = \Sigma,
+\]
+
+where \(U\) is uniform on the unit sphere and \(\xi\geq 0\) is independent of
+\(U\). The default radius in `relliptical()` gives a Gaussian sample; supplying
+a custom radial function changes the tail behavior without changing the shape.
+
+```{r simulate}
+library(HDElliptical)
+
+set.seed(1)
+shape <- matrix(c(2, 0.6, 0.6, 1), 2)
+x <- relliptical(
+  150,
+  location = c(1, -1),
+  shape = shape,
+  radial = function(n) abs(rt(n, df = 3))
+)
+```
+
+## Location and directional covariance
+
+The spatial median minimizes average Euclidean distance. Its diagnostics are
+stored as attributes so that the usual return value remains a numeric vector.
+
+```{r median-sign}
+center <- spatial_median(x)
+center
+attr(center, "converged")
+attr(center, "equation_residual")
+
+sign_shape <- sscm(x, center = center)
+sum(diag(sign_shape))
+```
+
+The pairwise spatial Kendall matrix is translation invariant and avoids direct
+location estimation.
+
+```{r rank-matrices}
+kendall_shape <- spatial_kendall(x)
+rank_shape <- spatial_rank_covariance(x)
+c(kendall_trace = sum(diag(kendall_shape)),
+  rank_trace = sum(diag(rank_shape)))
+```
+
+## Affine-equivariant shape
+
+Tyler's estimator repeatedly reweights observations by their current
+Mahalanobis radii and normalizes the result to trace \(p\).
+
+```{r tyler}
+tyler <- tyler_shape(x)
+sum(diag(tyler))
+attr(tyler, "converged")
+attr(tyler, "equation_residual")
+```
+
+When both location and affine-equivariant shape are needed, the
+Hettmansperger-Randles estimator solves the two estimating equations jointly.
+
+```{r hr}
+hr <- hr_estimator(x)
+hr$location
+hr$shape
+c(location = hr$location_equation_residual,
+  shape = hr$shape_equation_residual)
+```
+
+Exact Tyler and HR estimators require more observations than variables and
+general position. The functions stop on zero centered residuals or singular
+updates rather than returning an invalid matrix.
+

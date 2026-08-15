@@ -1,0 +1,16 @@
+.Rproj.user
+.Rhistory
+.RData
+.Ruserdata
+src/*.o
+src/*.so
+src/*.dll
+*.Rcheck
+*.tar.gz
+docs/
+output/*
+!output/benchmarks/
+output/benchmarks/*
+!output/benchmarks/BENCHMARK-REPORT.md
+!output/benchmarks/HDElliptical-benchmarks.csv
+tmp/

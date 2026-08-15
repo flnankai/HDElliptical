@@ -1,0 +1,29 @@
+citHeader("To cite HDElliptical in publications, please use:")
+
+bibentry(
+  bibtype = "Manual",
+  key = "HDElliptical",
+  title = "HDElliptical: High-Dimensional Methods for Elliptically Symmetric Distributions",
+  author = person("Long", "Feng"),
+  year = "2026",
+  note = sprintf("R package version %s", meta$Version),
+  url = "https://github.com/flnankai/HDElliptical"
+)
+
+bibentry(
+  bibtype = "Unpublished",
+  key = "Feng2026HDElliptical",
+  title = paste(
+    "HDElliptical: Reproducible High-Dimensional Methods for",
+    "Elliptically Symmetric Distributions"
+  ),
+  author = person("Long", "Feng"),
+  year = "2026",
+  note = "Manuscript accompanying HDElliptical version 0.1.0",
+  url = "https://github.com/flnankai/HDElliptical"
+)
+
+citFooter(paste(
+  "The article entry describes the accompanying manuscript.",
+  "Journal, volume, pages, and DOI will be added only after publication."
+))
