@@ -34,10 +34,10 @@ tests that must remain green as later chapters are added.
   also ran `donttest` examples. The sole NOTE is the conservative Windows DLL
   scan for linked `_exit`, `abort`, and `exit`; exact scanning found zero direct
   calls in the R and `src/` sources.
-- The as-CRAN run set `_R_CHECK_CRAN_INCOMING_REMOTE_=false`. The declared
-  GitHub repository and issue URLs still return 404, so their publication is an
-  external handoff blocker and CRAN-submission readiness is not claimed. A
-  console-only Bioconductor index timeout did not persist: dependency checking
+- The post-bootstrap as-CRAN run kept incoming remote checks enabled. The public
+  GitHub repository and issue URLs resolved, and all incoming checks completed
+  before the annotated `v0.1.0` tag and release were created. A console-only
+  Bioconductor index timeout did not persist: dependency checking
   completed successfully.
 
 The machine's startup locale requested `C.UTF-8`, which Windows R could not
@@ -284,9 +284,9 @@ classifier families remain review-only. The two source-blocked rows are the
 Chapter 2 structured-correlation review and Chapter 4 mutual-independence
 studentization. SEMC is implemented. On the exact tarball identified above,
 both standard and as-CRAN checks completed with 0 ERROR, 0 WARNING, and 1 NOTE;
-the linked-symbol NOTE and zero-direct-call result are recorded above. Remote
-incoming checking was disabled only because the declared GitHub repository and
-issue tracker remain unpublished external handoff dependencies.
+the linked-symbol NOTE and zero-direct-call result are recorded above. The
+final as-CRAN check kept incoming remote checks enabled after the repository and
+issue tracker were published.
 
 ## Deterministic software benchmarks
 

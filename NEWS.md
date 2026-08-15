@@ -282,11 +282,11 @@
   1 NOTE. Both ran examples, tests, and vignettes, and the as-CRAN check also
   ran `donttest`. The sole NOTE is the conservative DLL linked-symbol scan for
   `_exit`, `abort`, and `exit`; exact R/`src` direct-call scanning found zero.
-- The local 2026-08-15 pre-publication audit used
-  `_R_CHECK_CRAN_INCOMING_REMOTE_=false` because the declared GitHub repository
-  and issue tracker returned 404 at that time. The release checklist requires
-  a bootstrap push, a remote-enabled as-CRAN rerun, and regenerated artifacts
-  before the final tag; the local candidate did not claim CRAN readiness.
+- The public `flnankai/HDElliptical` repository and issue tracker were
+  bootstrapped before the final tag. The post-bootstrap as-CRAN check kept
+  incoming remote checks enabled, and the Windows, macOS, and Linux Actions
+  jobs passed before the annotated `v0.1.0` tag, release, and regenerated
+  release assets were published.
 - Added a deterministic installed-package benchmark harness and checked-in CSV/
   Markdown report with one representative workflow per chapter. These are
   machine-local software timings and fingerprints, not paper simulations,

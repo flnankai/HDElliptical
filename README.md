@@ -138,12 +138,12 @@ release checks. Standard `R CMD check --no-manual` and
 linked `_exit`, `abort`, and `exit` symbols; an exact direct-call scan of the R
 and `src/` sources found zero calls.
 
-The local 2026-08-15 release-candidate audit set
-`_R_CHECK_CRAN_INCOMING_REMOTE_=false` because the declared GitHub repository
-and issue URLs returned 404 at that time. The GitHub release checklist requires
-a bootstrap push, a remote-enabled as-CRAN rerun, and a rebuilt manifest before
-the `v0.1.0` tag. Until that handoff is performed, this local artifact set does
-not claim CRAN-submission readiness.
+The public repository and issue tracker were bootstrapped on 2026-08-16 and
+now resolve at `https://github.com/flnankai/HDElliptical`. The final as-CRAN
+run kept incoming remote checks enabled and reported the same status. The
+annotated `v0.1.0` tag and GitHub release were created only after the Windows,
+macOS, and Linux Actions jobs passed and the post-bootstrap tarball, check
+logs, and SHA-256 manifest were regenerated.
 
 The normative method ledger has 87 rows: 83 implemented, 2 review-only, and 2
 source-blocked. The two blocked rows are the Chapter 2 structured-correlation
@@ -166,8 +166,8 @@ simulation, size/power, or empirical-reproduction studies.
 ## Installation
 
 ```r
-# Development version, once the public repository is available:
-# remotes::install_github("flnankai/HDElliptical")
+# Current GitHub version:
+remotes::install_github("flnankai/HDElliptical")
 ```
 
 For a local checkout:

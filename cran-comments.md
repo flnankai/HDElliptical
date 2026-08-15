@@ -3,8 +3,7 @@
 - Windows x86_64, R 4.5.2, Rtools45, C++17
 - The final 0.1.0 source tarball built from this release state
 - Standard `R CMD check --no-manual`
-- `R CMD check --as-cran --no-manual` with
-  `_R_CHECK_CRAN_INCOMING_REMOTE_=false`
+- `R CMD check --as-cran --no-manual` with incoming remote checks enabled
 
 ## Current pre-submission validation
 
@@ -33,11 +32,10 @@ linked `_exit`, `abort`, and `exit` symbols. An exact direct-call scan of all R
 and `src/` sources found zero calls to those entry points; they enter through
 linked runtime/toolchain libraries.
 
-The as-CRAN run disabled incoming remote checks because the declared repository
-`https://github.com/flnankai/HDElliptical` and issue tracker
-`https://github.com/flnankai/HDElliptical/issues` still return 404. Publishing
-those URLs is an external handoff blocker. This package is not claimed to be
-CRAN-submission-ready until they exist and incoming remote checking can run.
+The public repository `https://github.com/flnankai/HDElliptical` and its issue
+tracker resolved during the final as-CRAN run. Incoming remote checks remained
+enabled and completed successfully before the `v0.1.0` tag and release were
+created.
 A console-only Bioconductor index timeout resolved, and dependency checking
 completed successfully.
 
