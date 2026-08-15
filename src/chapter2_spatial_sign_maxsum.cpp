@@ -182,13 +182,6 @@ SsmaxPreparedData ssmax_prepare_data(const arma::mat& x,
   return prepared;
 }
 
-long double ssmax_column_scale(const SsmaxPreparedData& prepared,
-                               const arma::uword j) {
-  return static_cast<long double>(prepared.direct_scale(j) > 0.0 ?
-    prepared.direct_scale(j) : prepared.operand_scale(j)) *
-    static_cast<long double>(prepared.direct_scale(j) > 0.0 ?
-      1.0 : prepared.normalized_scale(j));
-}
 
 arma::vec ssmax_restore_location(const arma::vec& location,
                                  const SsmaxPreparedData& prepared) {
@@ -214,9 +207,14 @@ arma::vec ssmax_restore_difference(const arma::vec& location,
                                    const SsmaxPreparedData& prepared) {
   arma::vec answer(location.n_elem);
   for (arma::uword j = 0; j < location.n_elem; ++j) {
+    const bool direct = prepared.direct_scale(j) > 0.0;
+    const double base = direct ? prepared.direct_scale(j) :
+      prepared.operand_scale(j);
+    const double normalized_location = direct ? location(j) :
+      prepared.normalized_scale(j) * location(j);
     answer(j) = ssmax_checked_double(
-      ssmax_column_scale(prepared, j) *
-        static_cast<long double>(location(j)),
+      static_cast<long double>(base) *
+        static_cast<long double>(normalized_location),
       "location difference from the centering origin"
     );
   }

@@ -142,8 +142,10 @@ test_that("PY and FLLM max match literal finite-v and Gumbel formulas", {
   expect_equal(py$components$rho.tilde.squared, rho2,
                tolerance = 1e-14)
   expect_identical(py$components$retained.upper.triangle, keep)
-  expect_equal(py$p.value, pnorm(expected.py, lower.tail = FALSE),
-               tolerance = 1e-14)
+  expect_lte(
+    abs(py$p.value - pnorm(expected.py, lower.tail = FALSE)),
+    1e-14
+  )
   expect_false(py$diagnostics$book.generic.sum.is.primary.PY)
 
   maximum <- max(literal$t.squared)
@@ -156,8 +158,7 @@ test_that("PY and FLLM max match literal finite-v and Gumbel formulas", {
                tolerance = 1e-12)
   expect_equal(unname(max.test$statistic), centered,
                tolerance = 1e-12)
-  expect_equal(max.test$p.value, -expm1(-intensity),
-               tolerance = 1e-14)
+  expect_lte(abs(max.test$p.value - (-expm1(-intensity))), 1e-14)
 })
 
 

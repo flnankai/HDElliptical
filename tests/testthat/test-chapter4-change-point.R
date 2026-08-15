@@ -218,14 +218,16 @@ test_that("DMS dense, variance, max and Fisher formulas are self-consistent", {
   expect_equal(fit$components$variance.sd^2, variance, tolerance = 3e-12)
   expect_equal(fit$components$max$statistic, m, tolerance = 3e-13)
   expect_equal(fit$components$max$pivot, pivot, tolerance = 3e-13)
-  expect_equal(fit$components$max$p.value, p.max, tolerance = 2e-15)
+  expect_lte(abs(fit$components$max$p.value - p.max), 2e-15)
   expect_equal(fit$components$sum$z, z, tolerance = 3e-13)
-  expect_equal(fit$components$sum$p.value, p.sum, tolerance = 2e-15)
+  expect_lte(abs(fit$components$sum$p.value - p.sum), 2e-15)
   expect_equal(unname(fit$statistic), -2 * log(p.max * p.sum),
                tolerance = 3e-13)
-  expect_equal(fit$p.value,
-               stats::pchisq(unname(fit$statistic), 4, lower.tail = FALSE),
-               tolerance = 2e-15)
+  expect_lte(
+    abs(fit$p.value -
+          stats::pchisq(unname(fit$statistic), 4, lower.tail = FALSE)),
+    2e-15
+  )
 })
 
 

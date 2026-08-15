@@ -208,8 +208,10 @@ test_that("HDA feasible centering and trace match the literal formulas", {
   )
   expect_equal(observed$components$variance.hat.scaled,
                reference$variance, tolerance = 2e-11)
-  expect_equal(observed$p.value,
-               pnorm(reference$z, lower.tail = FALSE), tolerance = 1e-14)
+  expect_lte(
+    abs(observed$p.value - pnorm(reference$z, lower.tail = FALSE)),
+    1e-14
+  )
   expect_true(observed$diagnostics$book.oracle.standardization.conflict)
 })
 
@@ -233,7 +235,7 @@ test_that("conditional maximum and Fisher adaptive tests match primary formulas"
                ignore_attr = TRUE)
   expect_equal(maximum$components$marginal.df, x$fit$T - 2)
   expect_equal(unname(maximum$statistic), centered, tolerance = 2e-12)
-  expect_equal(maximum$p.value, p.max, tolerance = 2e-14)
+  expect_lte(abs(maximum$p.value - p.max), 2e-14)
 
   adaptive <- ma_feng_wang_bao_conditional_alpha_test(
     x$fit, component = "adaptive"
@@ -241,8 +243,10 @@ test_that("conditional maximum and Fisher adaptive tests match primary formulas"
   p.sum <- pnorm(reference$z, lower.tail = FALSE)
   fisher <- -2 * (log(p.max) + log(p.sum))
   expect_equal(unname(adaptive$statistic), fisher, tolerance = 2e-12)
-  expect_equal(adaptive$p.value,
-               pchisq(fisher, 4, lower.tail = FALSE), tolerance = 2e-14)
+  expect_lte(
+    abs(adaptive$p.value - pchisq(fisher, 4, lower.tail = FALSE)),
+    2e-14
+  )
   expect_identical(
     adaptive$diagnostics$adaptive.calibration,
     "primary Fisher chi-square with 4 df"

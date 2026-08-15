@@ -113,17 +113,27 @@
   list(matrix = scaled / unit.norm, norm = scale * unit.norm)
 }
 
-.ch3teg_spd_sqrt <- function(x, context) {
+.ch3teg_spd_decomposition <- function(x, context) {
   decomposition <- tryCatch(
     eigen(x, symmetric = TRUE),
     error = identity
   )
   if (inherits(decomposition, "condition") ||
-      any(!is.finite(decomposition$values)) ||
-      any(decomposition$values <= 0)) {
+      any(!is.finite(decomposition$values))) {
     stop(context %+% " is not strictly positive definite; no ridge, " %+%
            "eigenvalue floor, or pseudoinverse was used.", call. = FALSE)
   }
+  tolerance <- sqrt(.Machine$double.eps) *
+    max(1, max(abs(decomposition$values)))
+  if (any(decomposition$values <= tolerance)) {
+    stop(context %+% " is not numerically positive definite; no ridge, " %+%
+           "eigenvalue floor, or pseudoinverse was used.", call. = FALSE)
+  }
+  decomposition
+}
+
+.ch3teg_spd_sqrt <- function(x, context) {
+  decomposition <- .ch3teg_spd_decomposition(x, context)
   root <- decomposition$vectors %*%
     (sqrt(decomposition$values) * t(decomposition$vectors))
   root <- (root + t(root)) / 2
@@ -412,6 +422,9 @@ tensor_spatial_sign_precision <- function(
     branch[k] <- if (inverse.branch) "inverse" else "identity"
     component <- tryCatch({
       if (inverse.branch) {
+        .ch3teg_spd_decomposition(
+          pilot.scatter[[k]], paste0("Mode-", k, " pilot scatter")
+        )
         factor <- chol(pilot.scatter[[k]])
         raw <- chol2inv(factor)
         if (any(!is.finite(raw))) {

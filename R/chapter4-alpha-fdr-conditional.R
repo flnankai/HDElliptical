@@ -193,6 +193,14 @@
   answer
 }
 
+.ch4_afc_has_full_column_rank <- function(x) {
+  if (!ncol(x)) {
+    return(TRUE)
+  }
+  rank <- qr(x, tol = sqrt(.Machine$double.eps), LAPACK = FALSE)$rank
+  isTRUE(rank == ncol(x))
+}
+
 .ch4_afc_validate_design <- function(design, n) {
   design <- .ch4_afc_matrix(design, "design", n, 1L)
   if (nrow(design) != n) {
@@ -204,7 +212,12 @@
          call. = FALSE)
   }
   scaled <- .ch4_afc_column_scale(design, "design")
-  root <- tryCatch(chol(crossprod(scaled$data)), error = function(e) NULL)
+  full.rank <- .ch4_afc_has_full_column_rank(scaled$data)
+  root <- if (full.rank) {
+    tryCatch(chol(crossprod(scaled$data)), error = function(e) NULL)
+  } else {
+    NULL
+  }
   if (is.null(root)) {
     stop(paste0(
       "design must have full column rank; no generalized inverse, ridge, ",
@@ -271,9 +284,14 @@ conditional_alpha_sieve_design <- function(
       stop("alpha_contrast must have one row per basis column.",
            call. = FALSE)
     }
-    contrast_root <- tryCatch(
-      chol(crossprod(alpha_contrast)), error = function(e) NULL
-    )
+    contrast.scaled <- .ch4_afc_column_scale(
+      alpha_contrast, "alpha_contrast"
+    )$data
+    contrast_root <- if (.ch4_afc_has_full_column_rank(contrast.scaled)) {
+      tryCatch(chol(crossprod(contrast.scaled)), error = function(e) NULL)
+    } else {
+      NULL
+    }
     if (is.null(contrast_root)) {
       stop("alpha_contrast must have full column rank.", call. = FALSE)
     }

@@ -53,6 +53,14 @@
   list(data = sweep(x, 2L, scale, "/"), scale = as.numeric(scale))
 }
 
+.ch4_alpha_has_full_column_rank <- function(x) {
+  if (!ncol(x)) {
+    return(TRUE)
+  }
+  rank <- qr(x, tol = sqrt(.Machine$double.eps), LAPACK = FALSE)$rank
+  isTRUE(rank == ncol(x))
+}
+
 .ch4_alpha_prepare <- function(returns, factors, min_assets = 1L) {
   returns <- .ch4_alpha_matrix(
     returns, "returns", min_rows = 2L, min_cols = min_assets
@@ -66,8 +74,13 @@
       call. = FALSE
     )
   }
-  design.cross <- crossprod(cbind(intercept = 1, f$data))
-  design.root <- tryCatch(chol(design.cross), error = function(e) NULL)
+  design <- cbind(intercept = 1, f$data)
+  design.cross <- crossprod(design)
+  design.root <- if (.ch4_alpha_has_full_column_rank(design)) {
+    tryCatch(chol(design.cross), error = function(e) NULL)
+  } else {
+    NULL
+  }
   if (is.null(design.root)) {
     stop(
       "The intercept-plus-factor design is rank deficient; no generalized inverse is used.",
@@ -266,7 +279,11 @@ grs_alpha_test <- function(returns, factors = NULL) {
   }
   ols <- .ch4_alpha_ols(prepared)
   scatter <- crossprod(ols$residuals.scaled) / prepared$T
-  root <- tryCatch(chol(scatter), error = function(e) NULL)
+  root <- if (.ch4_alpha_has_full_column_rank(ols$residuals.scaled)) {
+    tryCatch(chol(scatter), error = function(e) NULL)
+  } else {
+    NULL
+  }
   if (is.null(root)) {
     stop(
       "The divisor-T OLS residual covariance must be positive definite; no generalized inverse or ridge is used.",

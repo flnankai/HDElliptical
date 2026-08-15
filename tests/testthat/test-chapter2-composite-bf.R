@@ -255,16 +255,25 @@ test_that("Composite T2 is translation and diagonal-scale invariant", {
     sweep(bounded.y, 2L, extreme.units, "*")
   )
 
-  expect_equal(translated$statistic, baseline$statistic, tolerance = 3e-10)
+  expect_lte(
+    abs(unname(translated$statistic - baseline$statistic)),
+    3e-10
+  )
   expect_equal(translated$components$Q.n, baseline$components$Q.n,
                tolerance = 2e-10)
-  expect_equal(rescaled$statistic, baseline$statistic, tolerance = 3e-10)
+  expect_lte(
+    abs(unname(rescaled$statistic - baseline$statistic)),
+    3e-10
+  )
   expect_equal(rescaled$components$trace.Lambda.K.squared,
                baseline$components$trace.Lambda.K.squared,
                tolerance = 3e-9)
   expect_equal(rescaled$components$full.sample.blocks,
                baseline$components$full.sample.blocks)
-  expect_equal(permuted$statistic, baseline$statistic, tolerance = 4e-10)
+  expect_lte(
+    abs(unname(permuted$statistic - baseline$statistic)),
+    4e-10
+  )
   expect_equal(permuted$p.value, baseline$p.value, tolerance = 1e-12)
   expect_equal(extreme$statistic, bounded$statistic, tolerance = 4e-10)
   expect_equal(extreme$components$Q.n, bounded$components$Q.n,

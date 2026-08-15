@@ -279,8 +279,10 @@ test_that("nonsymmetric and mismatched pilots are not silently repaired", {
 
 test_that("banding-induced non-PD and unbanded p greater than n fail", {
   indefinite.x <- rbind(
-    c(1, 1, 0), c(-1, -1, 0),
-    c(0, 1, 1), c(0, -1, -1)
+    c(1, 1, 1),
+    c(-1, -1, -1),
+    c(2, 2, 2),
+    c(-2, -2, -2)
   )
   expect_warning(
     bad.band <- high_dimensional_hr(

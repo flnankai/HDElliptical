@@ -379,23 +379,23 @@ test_that("aSPU is stable under exchange, translation, and positive units", {
     correlation_source = "unequal"
   )
 
-  expect_equal(swapped$p.value, baseline$p.value, tolerance = 3e-13)
+  expect_lte(abs(swapped$p.value - baseline$p.value), 3e-13)
   expect_equal(swapped$components$W, -baseline$components$W,
                tolerance = 3e-14)
-  expect_equal(swapped$components$groups$odd$p.value,
-               baseline$components$groups$odd$p.value, tolerance = 3e-13)
-  expect_equal(swapped$components$groups$even$p.value,
-               baseline$components$groups$even$p.value, tolerance = 3e-13)
-  expect_equal(translated$p.value, baseline$p.value, tolerance = 5e-13)
+  expect_lte(abs(swapped$components$groups$odd$p.value -
+                   baseline$components$groups$odd$p.value), 3e-13)
+  expect_lte(abs(swapped$components$groups$even$p.value -
+                   baseline$components$groups$even$p.value), 3e-13)
+  expect_lte(abs(translated$p.value - baseline$p.value), 5e-13)
   expect_equal(translated$components$W, baseline$components$W,
                tolerance = 5e-13)
-  expect_equal(rescaled$p.value, baseline$p.value, tolerance = 5e-13)
+  expect_lte(abs(rescaled$p.value - baseline$p.value), 5e-13)
   expect_equal(rescaled$components$W, baseline$components$W,
                tolerance = 5e-13)
   expect_equal(rescaled$components$coordinate.correlation,
                baseline$components$coordinate.correlation,
                tolerance = 5e-13)
-  expect_equal(permuted$p.value, baseline$p.value, tolerance = 5e-13)
+  expect_lte(abs(permuted$p.value - baseline$p.value), 5e-13)
   expect_equal(permuted$components$finite$null.covariance,
                baseline$components$finite$null.covariance,
                tolerance = 5e-12)

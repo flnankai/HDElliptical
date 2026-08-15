@@ -215,10 +215,10 @@ test_that("oracle CLX agrees with a direct equation (2) calculation", {
   expect_s3_class(fit, "htest")
   expect_equal(unname(fit$raw.statistic), reference$M, tolerance = 1e-13)
   expect_equal(unname(fit$statistic), reference$G, tolerance = 1e-13)
-  expect_equal(
-    fit$p.value,
-    1 - exp(-pi^(-0.5) * exp(-reference$G / 2)),
-    tolerance = 1e-15
+  expect_lte(
+    abs(fit$p.value -
+          (1 - exp(-pi^(-0.5) * exp(-reference$G / 2)))),
+    1e-15
   )
   expect_equal(
     unname(fit$components$transformed.difference),

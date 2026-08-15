@@ -412,9 +412,12 @@ test_that("PMD sparse CCA validates paired data and solver degeneracy", {
   expect_error(pmd_sparse_cca(x, y, 1, 1, initial_x = 1),
                "supplied together")
   expect_error(pmd_sparse_cca(x, y, 0.5, 1), "\\[1, sqrt")
+  zero.operator.x <- cbind(a = c(1, -1, 1, -1))
+  zero.operator.y <- cbind(b = c(1, 1, -1, -1))
   expect_warning(
     invalid <- pmd_sparse_cca(
-      x, y, 1, 1, center = FALSE, scale = FALSE, strict = FALSE
+      zero.operator.x, zero.operator.y, 1, 1,
+      center = FALSE, scale = FALSE, strict = FALSE
     ),
     "cross-covariance operator is zero"
   )

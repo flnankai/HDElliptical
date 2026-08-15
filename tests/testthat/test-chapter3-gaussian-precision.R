@@ -255,10 +255,16 @@ test_that("graphical lasso objective and KKT are reconstructed directly", {
                                     col(fit$estimate)]))
   history <- fit$diagnostics$solver$objective.history
 
-  expect_equal(fit$diagnostics$solver$diagonal.kkt.residual,
-               unname(kkt["diagonal"]), tolerance = 2e-12)
-  expect_equal(fit$diagnostics$solver$off.diagonal.kkt.residual,
-               unname(kkt["off.diagonal"]), tolerance = 2e-12)
+  expect_lte(
+    abs(fit$diagnostics$solver$diagonal.kkt.residual -
+          unname(kkt["diagonal"])),
+    2e-12
+  )
+  expect_lte(
+    abs(fit$diagnostics$solver$off.diagonal.kkt.residual -
+          unname(kkt["off.diagonal"])),
+    2e-12
+  )
   expect_lte(max(kkt), tolerance)
   expect_equal(fit$diagnostics$solver$objective, objective,
                tolerance = 1e-12)

@@ -205,13 +205,14 @@ arma::vec lwz_restore_location(const arma::vec& location,
                                const LwzPreparedData& prepared) {
   arma::vec answer(location.n_elem);
   for (arma::uword j = 0; j < location.n_elem; ++j) {
-    const long double scale =
-      static_cast<long double>(prepared.scale_base(j)) *
-      static_cast<long double>(prepared.scale_ratio(j));
-    const long double value =
-      static_cast<long double>(prepared.anchor(j)) +
-      scale * static_cast<long double>(location(j));
-    answer(j) = lwz_checked_double(value, "restored location");
+    const double scaled_location =
+      prepared.scale_ratio(j) * location(j);
+    const double value = std::fma(
+      prepared.scale_base(j), scaled_location, prepared.anchor(j)
+    );
+    answer(j) = lwz_checked_double(
+      static_cast<long double>(value), "restored location"
+    );
   }
   return answer;
 }
