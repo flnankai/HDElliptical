@@ -28,17 +28,18 @@ tests that must remain green as later chapters are added.
   references with the official JSS style, and produced the visually inspected
   22-page release PDF recorded by the JSS build materials.
 - The final 0.1.0 source tarball built from this release state completed
-  standard `R CMD check --no-manual` and
-  `R CMD check --as-cran --no-manual`; each reported 0 ERROR, 0 WARNING, and
-  1 NOTE. Both checks ran examples, tests, and vignettes, and the as-CRAN run
-  also ran `donttest` examples. The sole NOTE is the conservative Windows DLL
+  standard `R CMD check --no-manual` with 0 ERROR, 0 WARNING, and 1 NOTE, and
+  remote-enabled `R CMD check --as-cran --no-manual` with 0 ERROR, 0 WARNING,
+  and 2 NOTEs. Both checks ran examples, tests, and vignettes, and the as-CRAN
+  run also ran `donttest` examples. Both share the conservative Windows DLL
   scan for linked `_exit`, `abort`, and `exit`; exact scanning found zero direct
-  calls in the R and `src/` sources.
+  calls in the R and `src/` sources. The additional as-CRAN NOTE identifies a
+  new CRAN submission.
 - The post-bootstrap as-CRAN run kept incoming remote checks enabled. The public
   GitHub repository and issue URLs resolved, and all incoming checks completed
   before the annotated `v0.1.0` tag and release were created. A console-only
-  Bioconductor index timeout did not persist: dependency checking
-  completed successfully.
+  Bioconductor index timeout did not persist: dependency checking completed
+  successfully.
 
 The machine's startup locale requested `C.UTF-8`, which Windows R could not
 set. Checks were therefore run with `LC_ALL=C`; the earlier locale messages
@@ -283,10 +284,11 @@ review-only, and 2 source-blocked rows. SCIO/scaled-lasso and unaudited
 classifier families remain review-only. The two source-blocked rows are the
 Chapter 2 structured-correlation review and Chapter 4 mutual-independence
 studentization. SEMC is implemented. On the exact tarball identified above,
-both standard and as-CRAN checks completed with 0 ERROR, 0 WARNING, and 1 NOTE;
-the linked-symbol NOTE and zero-direct-call result are recorded above. The
-final as-CRAN check kept incoming remote checks enabled after the repository and
-issue tracker were published.
+the standard check completed with 0 ERROR, 0 WARNING, and 1 NOTE; the as-CRAN
+check completed with 0 ERROR, 0 WARNING, and 2 NOTEs. The shared linked-symbol
+NOTE, the additional new-submission NOTE, and the zero-direct-call result are
+recorded above. The final as-CRAN check kept incoming remote checks enabled
+after the repository and issue tracker were published.
 
 ## Deterministic software benchmarks
 

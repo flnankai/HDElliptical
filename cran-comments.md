@@ -22,22 +22,26 @@ and the synchronized release tree matched all 226 generated files.
 
 ## R CMD check results
 
-Both the standard and as-CRAN checks completed with:
+The standard check completed with:
 
 0 ERROR | 0 WARNING | 1 NOTE
 
+The remote-enabled as-CRAN check completed with:
+
+0 ERROR | 0 WARNING | 2 NOTEs
+
 Both checks ran examples, tests, and vignettes. The as-CRAN check also ran
-`donttest` examples. The sole NOTE is the conservative Windows DLL scan for
-linked `_exit`, `abort`, and `exit` symbols. An exact direct-call scan of all R
-and `src/` sources found zero calls to those entry points; they enter through
-linked runtime/toolchain libraries.
+`donttest` examples. Both share the conservative Windows DLL scan for linked
+`_exit`, `abort`, and `exit` symbols. An exact direct-call scan of all R and
+`src/` sources found zero calls to those entry points; they enter through linked
+runtime/toolchain libraries. The additional as-CRAN NOTE identifies this as a
+new submission.
 
 The public repository `https://github.com/flnankai/HDElliptical` and its issue
 tracker resolved during the final as-CRAN run. Incoming remote checks remained
 enabled and completed successfully before the `v0.1.0` tag and release were
-created.
-A console-only Bioconductor index timeout resolved, and dependency checking
-completed successfully.
+created. A console-only Bioconductor index timeout resolved, and dependency
+checking completed successfully.
 
 ## Downstream dependencies
 

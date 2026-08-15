@@ -131,19 +131,20 @@ installed-package run reported 6,267 passes and zero failures, errors, warnings,
 or skips. Two independent generation passes produced the same 226-file hash
 manifest, and all 226 generated files matched the synchronized release tree.
 The final 0.1.0 source tarball built from this release state completed both
-release checks. Standard `R CMD check --no-manual` and
-`R CMD check --as-cran --no-manual` each reported 0 ERROR, 0 WARNING, and
-1 NOTE. Both ran examples, tests, and vignettes; the as-CRAN run also executed
-`donttest` examples. The sole NOTE is the conservative Windows DLL scan for
-linked `_exit`, `abort`, and `exit` symbols; an exact direct-call scan of the R
-and `src/` sources found zero calls.
+release checks. Standard `R CMD check --no-manual` reported 0 ERROR, 0 WARNING,
+and 1 NOTE; remote-enabled `R CMD check --as-cran --no-manual` reported
+0 ERROR, 0 WARNING, and 2 NOTEs. Both ran examples, tests, and vignettes; the
+as-CRAN run also executed `donttest` examples. Both checks share the conservative
+Windows DLL scan for linked `_exit`, `abort`, and `exit` symbols; an exact
+direct-call scan of the R and `src/` sources found zero calls. The additional
+as-CRAN NOTE identifies this as a new CRAN submission.
 
 The public repository and issue tracker were bootstrapped on 2026-08-16 and
 now resolve at `https://github.com/flnankai/HDElliptical`. The final as-CRAN
-run kept incoming remote checks enabled and reported the same status. The
-annotated `v0.1.0` tag and GitHub release were created only after the Windows,
-macOS, and Linux Actions jobs passed and the post-bootstrap tarball, check
-logs, and SHA-256 manifest were regenerated.
+run kept incoming remote checks enabled and completed without errors or
+warnings. The annotated `v0.1.0` tag and GitHub release were created only after
+the Windows, macOS, and Linux Actions jobs passed and the post-bootstrap
+tarball, check logs, and SHA-256 manifest were regenerated.
 
 The normative method ledger has 87 rows: 83 implemented, 2 review-only, and 2
 source-blocked. The two blocked rows are the Chapter 2 structured-correlation

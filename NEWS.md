@@ -277,11 +277,12 @@
   correlation review and Chapter 4 mutual-independence studentization; SEMC is
   implemented.
 - The final 0.1.0 source tarball built from this release state passed standard
-  `R CMD check --no-manual` and
-  `R CMD check --as-cran --no-manual`, each with 0 ERROR, 0 WARNING, and
-  1 NOTE. Both ran examples, tests, and vignettes, and the as-CRAN check also
-  ran `donttest`. The sole NOTE is the conservative DLL linked-symbol scan for
-  `_exit`, `abort`, and `exit`; exact R/`src` direct-call scanning found zero.
+  `R CMD check --no-manual` with 0 ERROR, 0 WARNING, and 1 NOTE, and
+  remote-enabled `R CMD check --as-cran --no-manual` with 0 ERROR, 0 WARNING,
+  and 2 NOTEs. Both ran examples, tests, and vignettes, and the as-CRAN check
+  also ran `donttest`. Both checks share the conservative DLL linked-symbol
+  scan for `_exit`, `abort`, and `exit`; exact R/`src` direct-call scanning
+  found zero. The additional as-CRAN NOTE identifies a new CRAN submission.
 - The public `flnankai/HDElliptical` repository and issue tracker were
   bootstrapped before the final tag. The post-bootstrap as-CRAN check kept
   incoming remote checks enabled, and the Windows, macOS, and Linux Actions
