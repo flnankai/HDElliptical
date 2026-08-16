@@ -1,7 +1,7 @@
 # HDElliptical
 
 `HDElliptical` is the companion R package for *High-Dimensional Data Analysis
-for Elliptically Symmetric Distributions*. Version 0.1.0 implements Chapters
+for Elliptically Symmetric Distributions*. Version 0.1.1 implements Chapters
 1--7, with Rcpp/RcppArmadillo kernels for the computationally intensive
 parts and direct links between the book, the source papers, the public API,
 and regression tests.
@@ -150,17 +150,17 @@ The normative method ledger has 87 rows: 83 implemented, 2 review-only, and 2
 source-blocked. The two blocked rows are the Chapter 2 structured-correlation
 review and Chapter 4 mutual-independence studentization; SEMC is implemented.
 
-The dated [method coverage](development/METHOD_COVERAGE.md),
-[machine-readable traceability](development/METHOD_TRACEABILITY.csv),
-[book errata](development/BOOK_ERRATA.md), and
-[validation snapshot](development/VALIDATION_20260814.md) keep the book
+The dated [method coverage](https://github.com/flnankai/HDElliptical/blob/main/development/METHOD_COVERAGE.md),
+[machine-readable traceability](https://github.com/flnankai/HDElliptical/blob/main/development/METHOD_TRACEABILITY.csv),
+[book errata](https://github.com/flnankai/HDElliptical/blob/main/development/BOOK_ERRATA.md), and
+[validation snapshot](https://github.com/flnankai/HDElliptical/blob/main/development/VALIDATION_20260814.md) keep the book
 formula, primary-paper correction, public API, compiled kernel, and test
 evidence traceable for release and manuscript review.
 
 The installed-package [deterministic benchmark harness](inst/benchmarks/README.md)
 runs one representative callable workflow for each of Chapters 1--7. Its
-[machine-local report](output/benchmarks/BENCHMARK-REPORT.md) and
-[CSV output](output/benchmarks/HDElliptical-benchmarks.csv) record timings and
+[machine-local report](https://github.com/flnankai/HDElliptical/blob/main/output/benchmarks/BENCHMARK-REPORT.md) and
+[CSV output](https://github.com/flnankai/HDElliptical/blob/main/output/benchmarks/HDElliptical-benchmarks.csv) record timings and
 deterministic fingerprints. They are software benchmarks, not paper-specific
 simulation, size/power, or empirical-reproduction studies.
 

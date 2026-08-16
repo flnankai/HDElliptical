@@ -1,7 +1,7 @@
 Package: HDElliptical
 Type: Package
 Title: High-Dimensional Methods for Elliptically Symmetric Distributions
-Version: 0.1.0
+Version: 0.1.1
 Authors@R: person(
     given = "Long",
     family = "Feng",
@@ -11,9 +11,9 @@ Authors@R: person(
 Description: Fast, documented implementations of robust estimation, testing,
     dimension reduction, classification, and clustering methods for
     high-dimensional elliptically symmetric data. Computational kernels use
-    'Rcpp' and 'RcppArmadillo'. The package follows the methods developed and
-    reviewed in the book "High-Dimensional Data Analysis for Elliptically
-    Symmetric Distributions".
+    'Rcpp' and 'RcppArmadillo'. The package follows methods reviewed in Feng
+    (2026), "High-Dimensional Data Analysis for Elliptically Symmetric
+    Distributions" <https://github.com/flnankai/HDElliptical/releases>.
 License: MIT + file LICENSE
 URL: https://github.com/flnankai/HDElliptical
 BugReports: https://github.com/flnankai/HDElliptical/issues
