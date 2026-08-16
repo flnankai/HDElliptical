@@ -1,3 +1,10 @@
+# HDElliptical 0.1.1
+
+- Replaced README links to build-excluded audit and benchmark files with
+  public GitHub URLs so they remain resolvable from the CRAN source package.
+- Added an author-year citation and public source URL to the package
+  description for CRAN submission metadata.
+
 # HDElliptical 0.1.0
 
 ## Chapter 1 foundations
