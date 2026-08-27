@@ -1,5 +1,5 @@
-// Copyright (C) 2026
-// SPDX-License-Identifier: GPL-3.0-or-later
+// Copyright (c) 2026 Long Feng
+// SPDX-License-Identifier: MIT
 
 // [[Rcpp::depends(RcppArmadillo)]]
 // [[Rcpp::plugins(cpp17)]]

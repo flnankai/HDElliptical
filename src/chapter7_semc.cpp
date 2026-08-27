@@ -1,14 +1,16 @@
 // SEMC numerical kernels for HDElliptical.
 //
-// Algorithm provenance: Feng and Zhuang (2026), arXiv:2605.08995, and the
-// authors' MIT-licensed GEMcluster implementation at commit
+// Copyright (c) 2026 Long Feng
+// SPDX-License-Identifier: MIT
+//
+// Algorithm and validation provenance: Feng and Zhuang (2026),
+// arXiv:2605.08995, and the authors' external MIT-licensed GEMcluster
+// implementation at commit
 // 10fce04fe690fe274dd5d237cfcd3d5c6a4139f6.  This file is an independent
 // rewrite of the mathematical and software contracts; it contains no code
 // from the GPL-licensed huge package.
-//
-// Upstream reference implementation copyright (c) 2026 Dan Zhuang and
-// Long Feng. HDElliptical adaptation copyright (c) 2026 HDElliptical
-// contributors. SPDX-License-Identifier: MIT
+// The external GEMcluster reference implementation (not included) is
+// copyright (c) 2026 Dan Zhuang and Long Feng.
 
 // [[Rcpp::depends(RcppArmadillo)]]
 // [[Rcpp::plugins(cpp17)]]

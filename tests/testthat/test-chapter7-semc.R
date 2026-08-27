@@ -1,8 +1,14 @@
 # SEMC formula, certificate, fixed-fixture, RNG, and boundary tests.
 #
-# Provenance: Feng and Zhuang (2026), arXiv:2605.08995, and the authors'
-# MIT-licensed GEMcluster implementation at commit
-# 10fce04fe690fe274dd5d237cfcd3d5c6a4139f6. No simulation is run here.
+# Copyright (c) 2026 Long Feng
+# SPDX-License-Identifier: MIT
+#
+# Validation provenance: Feng and Zhuang (2026), arXiv:2605.08995, and the
+# authors' external MIT-licensed GEMcluster implementation at commit
+# 10fce04fe690fe274dd5d237cfcd3d5c6a4139f6. Selected outputs are used as
+# validation fixtures; no GEMcluster source code or simulation is included.
+# The external GEMcluster reference implementation is copyright (c) 2026
+# Dan Zhuang and Long Feng.
 
 
 .semc_test_fixture <- function() {

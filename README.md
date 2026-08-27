@@ -1,7 +1,7 @@
 # HDElliptical
 
 `HDElliptical` is the companion R package for *High-Dimensional Data Analysis
-for Elliptically Symmetric Distributions*. Version 0.1.1 implements Chapters
+for Elliptically Symmetric Distributions*. Version 0.1.2 implements Chapters
 1--7, with Rcpp/RcppArmadillo kernels for the computationally intensive
 parts and direct links between the book, the source papers, the public API,
 and regression tests.

@@ -1,11 +1,15 @@
 # SEMC implementation for HDElliptical.
 #
-# Algorithm provenance: Feng and Zhuang (2026), arXiv:2605.08995, and the
-# authors' MIT-licensed GEMcluster implementation at commit
+# Copyright (c) 2026 Long Feng
+# SPDX-License-Identifier: MIT
+#
+# Algorithm and validation provenance: Feng and Zhuang (2026),
+# arXiv:2605.08995, and the authors' external MIT-licensed GEMcluster
+# implementation at commit
 # 10fce04fe690fe274dd5d237cfcd3d5c6a4139f6. This is an independent rewrite
 # with every software-only tuning choice and numerical safeguard exposed.
-# Upstream reference implementation copyright (c) 2026 Dan Zhuang and
-# Long Feng. SPDX-License-Identifier: MIT
+# The external GEMcluster reference implementation (not included) is copyright
+# (c) 2026 Dan Zhuang and Long Feng.
 
 
 .semc_data <- function(x, name = "x", min_rows = 2L) {

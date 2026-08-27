@@ -1,12 +1,25 @@
 Package: HDElliptical
 Type: Package
 Title: High-Dimensional Methods for Elliptically Symmetric Distributions
-Version: 0.1.1
-Authors@R: person(
-    given = "Long",
-    family = "Feng",
-    email = "flnankai@nankai.edu.cn",
-    role = c("aut", "cre")
+Version: 0.1.2
+Authors@R: c(
+    person(
+      given = "Long",
+      family = "Feng",
+      email = "flnankai@nankai.edu.cn",
+      role = c("aut", "cre", "cph"),
+      comment = "Copyright holder for the HDElliptical implementation"
+    ),
+    person(
+      given = "Dan",
+      family = "Zhuang",
+      role = "ctb",
+      comment = paste(
+        "SEMC methodology and the external GEMcluster reference",
+        "implementation used for validation; no GEMcluster source",
+        "code is included"
+      )
+    )
   )
 Description: Fast, documented implementations of robust estimation, testing,
     dimension reduction, classification, and clustering methods for

@@ -1,3 +1,12 @@
+# HDElliptical 0.1.2
+
+- Expanded `Authors@R` to identify all package contributors and copyright
+  holders, including Dan Zhuang's scoped SEMC and GEMcluster contribution.
+- Clarified package, SEMC, reference-implementation, and test-fixture
+  provenance in `inst/COPYRIGHTS` and the affected source headers.
+- Corrected two package-original Chapter 4 C++ files whose generic GPL SPDX
+  headers conflicted with their intended MIT licensing.
+
 # HDElliptical 0.1.1
 
 - Replaced README links to build-excluded audit and benchmark files with
