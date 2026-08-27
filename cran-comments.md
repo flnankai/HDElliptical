@@ -1,74 +1,59 @@
-## Test environment
+## Resubmission
 
-- Windows x86_64, R 4.5.2, Rtools45, C++17
-- The final 0.1.0 source tarball built from this release state
-- Standard `R CMD check --no-manual`
-- `R CMD check --as-cran --no-manual` with incoming remote checks enabled
+This is a resubmission of HDElliptical 0.1.1, now version 0.1.2.
 
-## Current pre-submission validation
+Thank you for identifying the incomplete authorship and copyright information.
+We audited the authorship, provenance, and license metadata of every package
+component and made the following changes:
 
-The fresh namespace contains 176 exports and 3 S3 registrations. The 140 Rcpp
-attributes match 140 native registrations one-for-one. Roxygen generated 223 Rd
-files covering 169 public topics, and every Rd file parsed successfully.
+- Authors@R now lists Long Feng with the aut, cre, and cph roles for the
+  HDElliptical implementation.
+- Authors@R now lists Dan Zhuang with the ctb role for the SEMC methodology
+  and the external MIT-licensed GEMcluster reference implementation used
+  during validation. No GEMcluster source code is included in HDElliptical.
+- inst/COPYRIGHTS now distinguishes the copyright in the external GEMcluster
+  repository from the copyright in HDElliptical, and records the immutable
+  GEMcluster revision inspected, its MIT license, and its copyright holders,
+  Dan Zhuang and Long Feng.
+- The SEMC code in HDElliptical is an independent reimplementation from the
+  published mathematical specification and documented behavioral contracts.
+  No copyrightable source expression was copied from GEMcluster, and no
+  GPL-licensed source code was copied or linked.
+- During the audit, we found erroneous GPL-3.0-or-later SPDX headers in two
+  original package files, src/chapter4_alpha.cpp and
+  src/chapter4_alpha_fdr_conditional.cpp. Long Feng confirmed that he holds
+  the copyright in these original files and may distribute them under MIT.
+  Their headers now identify Long Feng and MIT, consistently with the package
+  license; the files contain no GPL-derived code.
+- Authors of the statistical publications cited by the package remain
+  identified in the documentation references. They are not listed as software
+  contributors or copyright holders because no source code from those
+  publications was copied or derived.
+- The package version was increased from 0.1.1 to 0.1.2 to distinguish this
+  resubmission.
 
-The source built, installed, and loaded successfully. Across 56 test files, the
-source contains 688 named `test_that` blocks and 5,781 static `expect_*` calls.
-The installed-package reporter recorded 6,267 passes with zero failures, errors,
-warnings, or skips. The standard documentation examples and the added
-`donttest` fixtures were also executed successfully in the isolated install.
+These changes make the ownership and provenance of all distributed package
+components explicit and consistent with the package's MIT license.
 
-Two independent generation passes produced the same 226-file hash manifest,
-and the synchronized release tree matched all 226 generated files.
+## Test environments
+
+- Windows 11 x64 (build 26200), R 4.6.1 (2026-06-24 ucrt), UTF-8 session,
+  GCC 14.3.0, `R CMD check --as-cran --no-manual`
 
 ## R CMD check results
 
-The standard check completed with:
+The local check of the 0.1.2 source tarball completed with:
 
 0 ERROR | 0 WARNING | 1 NOTE
 
-The remote-enabled as-CRAN check completed with:
-
-0 ERROR | 0 WARNING | 2 NOTEs
-
-Both checks ran examples, tests, and vignettes. The as-CRAN check also ran
-`donttest` examples. Both share the conservative Windows DLL scan for linked
-`_exit`, `abort`, and `exit` symbols. An exact direct-call scan of all R and
-`src/` sources found zero calls to those entry points; they enter through linked
-runtime/toolchain libraries. The additional as-CRAN NOTE identifies this as a
-new submission.
-
-The public repository `https://github.com/flnankai/HDElliptical` and its issue
-tracker resolved during the final as-CRAN run. Incoming remote checks remained
-enabled and completed successfully before the `v0.1.0` tag and release were
-created. A console-only Bioconductor index timeout resolved, and dependency
-checking completed successfully.
+The NOTE is the conservative Windows DLL scan for linked `_exit`, `abort`, and
+`exit` symbols. An exact direct-call scan of all R, C, and C++ sources found no
+calls to those entry points; the symbols enter through linked runtime/toolchain
+libraries. All examples, `donttest` examples, tests, and vignettes completed
+successfully. The test suite recorded 6,267 passes with zero failures,
+warnings, or skips.
 
 ## Downstream dependencies
 
-This would be the first CRAN submission of `HDElliptical`, so there are no downstream
-dependencies to check.
-
-## Release scope
-
-Version 0.1.0 provides practical, documented implementations of the
-formula-complete methods audited across book Chapters 1--7. The final 87-row
-traceability ledger records 83 implemented, 2 review-only, and 2 source-blocked
-rows. The source-blocked rows are the Chapter 2 structured-correlation review
-and Chapter 4 mutual-independence studentization; no adjacent method is
-presented as a substitute. SCIO/scaled-lasso and unaudited classifier families
-remain review-only.
-
-This release includes the Chapter 2 generic weighted location/oracle-score
-layer, the Chapter 3 convex-l1 EC2, Gaussian off-diagonal graphical-lasso and
-CLIME estimators, the formula-closed Chapter 4 completion APIs, and Chapter 7
-SEMC fitting, prediction, and Gap-LSE selection. SEMC is an independent rewrite
-against the primary source and pinned
-`flnankai/GEMcluster@10fce04fe690fe274dd5d237cfcd3d5c6a4139f6` MIT release; no
-author-code expression was copied.
-
-The installed-package benchmark harness records one deterministic callable
-workflow for each of Chapters 1--7, with machine-local timings and stable result
-fingerprints. These benchmarks are practical software evidence, not
-paper-specific Monte Carlo simulations, size/power experiments, empirical
-reproductions, or performance guarantees. The package does not ship source-
-article simulation grids, result tables, reproduction scripts, or data.
+This remains the first CRAN submission of HDElliptical, so there are no
+downstream dependencies to check.

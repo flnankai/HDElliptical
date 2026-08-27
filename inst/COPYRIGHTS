@@ -6,23 +6,37 @@ Package implementation
 
 Copyright (c) 2026 Long Feng.
 
-Except where stated otherwise below, the R and C++ implementation in this
-package is original work distributed under the MIT License. See LICENSE and
-LICENSE.md in the package source.
+All R, C++, and test implementations distributed in this package are original
+work copyright Long Feng and are distributed under the MIT License. See
+LICENSE in the package source. The full MIT text is also available as
+LICENSE.md in the public source repository.
 
-SEMC methodology provenance
----------------------------
+Chapter 4 implementation provenance
+-----------------------------------
+
+The implementations in src/chapter4_alpha.cpp and
+src/chapter4_alpha_fdr_conditional.cpp are original HDElliptical work by Long
+Feng and are distributed under the MIT License. They contain no copied or
+derived GPL source code.
+
+External SEMC reference implementation (not included)
+-----------------------------------------------------
 
 The Chapter 7 SEMC implementation in R/chapter7-semc.R and
 src/chapter7_semc.cpp is an independent reimplementation from the published
-mathematical specification and documented behavioral contracts. During the
-method audit, the authors' reference implementation was inspected at the
-following immutable revision:
+mathematical specification and documented behavioral contracts. For method
+audit and fixture validation, the external authors' reference implementation
+was inspected at the following immutable revision:
 
   Repository: https://github.com/flnankai/GEMcluster
   Commit:     10fce04fe690fe274dd5d237cfcd3d5c6a4139f6
   SPDX:       MIT
   Copyright:  2026 Dan Zhuang and Long Feng
+
+This copyright applies only to the external GEMcluster repository, which is
+not included in HDElliptical. Dan Zhuang is credited in Authors@R as a
+contributor for the SEMC methodology and the external reference implementation
+used for validation.
 
 No copyrightable source expression was copied or selectively migrated from
 GEMcluster. The package does not copy or link source code from the GPL-licensed
@@ -34,6 +48,7 @@ Literature and formula provenance
 ---------------------------------
 
 Bibliographic attribution for statistical methods is recorded in the Rd
-references, the book manuscript, and development/METHOD_TRACEABILITY.csv.
-Those citations identify mathematical provenance and do not imply that source
-code from the cited authors was incorporated into this package.
+references and package vignettes. The public source repository also records
+the book manuscript and development/METHOD_TRACEABILITY.csv. These citations
+identify mathematical provenance and do not imply that source code from the
+cited authors was incorporated into this package.

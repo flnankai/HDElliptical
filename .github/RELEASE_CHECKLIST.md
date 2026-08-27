@@ -47,8 +47,9 @@ root. Complete this checklist from a clean clone of the release tag.
 - [ ] Re-run `R CMD check --as-cran` with incoming remote checks enabled,
   rebuild the source tarball, and regenerate the check summary and release
   manifest from that exact post-bootstrap commit.
-- [ ] Create an annotated `v0.1.0` tag only after the remote-enabled check is
-  green, and verify that the tag matches the regenerated source manifest.
+- [ ] Create an annotated tag matching the version in `DESCRIPTION` only after
+  the remote-enabled check is green, and verify that the tag matches the
+  regenerated source manifest.
 - [ ] Create a GitHub release from the tag and attach the manifest-listed
   deliverable assets plus `RELEASE-MANIFEST.txt` and its `.sha256` sidecar.
   Do not upload obsolete draft PDFs or development tarballs.

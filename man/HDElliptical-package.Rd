@@ -19,7 +19,12 @@ Useful links:
 
 }
 \author{
-\strong{Maintainer}: Long Feng \email{flnankai@nankai.edu.cn}
+\strong{Maintainer}: Long Feng \email{flnankai@nankai.edu.cn} (Copyright holder for the HDElliptical implementation) [copyright holder]
+
+Other contributors:
+\itemize{
+  \item Dan Zhuang (SEMC methodology and the external GEMcluster reference implementation used for validation; no GEMcluster source code is included) [contributor]
+}
 
 }
 \keyword{internal}
