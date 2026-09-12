@@ -1,3 +1,11 @@
+# HDElliptical 0.1.3
+
+- Made two numerical-boundary tests portable to Linux ARM64 by allowing either
+  mathematically degenerate trace estimate to trigger the documented
+  no-repair error and by using an exactly representable cross-zero fixture.
+- Relaxed two chi-square p-value comparisons to a still stringent 1e-12
+  tolerance so the tests do not depend on extended-precision intermediates.
+
 # HDElliptical 0.1.2
 
 - Expanded `Authors@R` to identify all package contributors and copyright

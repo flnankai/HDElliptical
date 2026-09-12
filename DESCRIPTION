@@ -1,7 +1,7 @@
 Package: HDElliptical
 Type: Package
 Title: High-Dimensional Methods for Elliptically Symmetric Distributions
-Version: 0.1.2
+Version: 0.1.3
 Authors@R: c(
     person(
       given = "Long",

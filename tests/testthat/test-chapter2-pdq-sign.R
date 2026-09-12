@@ -490,9 +490,11 @@ test_that("U(0)=0 is limited to cross signs and fitted zeros fail", {
     sweep(-directions.x, 2L, center.x, "+")
   )
   directions.y <- rbind(
-    c(1, 2, 3), c(2, -3, 1), c(-4, 1, 2), c(3, 4, -2)
+    c(1, 2, 4), c(2, -4, 1), c(-4, 1, 2), c(3, 4, -2)
   )
-  y.zero <- 10 * rbind(directions.y, -directions.y)
+  # Pooled ranges and group-2 PDQ scales are dyadic, so the intended cross
+  # residual remains exactly zero with or without fused multiply-add.
+  y.zero <- rbind(directions.y, -directions.y)
   cross.zero <- feng_wang_pdq_two_sample_test(
     x.zero, y.zero, B = 7L, seed = 5
   )

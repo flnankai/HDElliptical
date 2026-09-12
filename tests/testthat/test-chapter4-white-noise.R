@@ -195,9 +195,9 @@ test_that("classical portmanteau statistics match literal formulas", {
   expect_equal(unname(bp$components$autocorrelations), rho,
                tolerance = 2e-15)
   expect_equal(bp$p.value, pchisq(bp.ref, lag, lower.tail = FALSE),
-               tolerance = 2e-15)
+               tolerance = 1e-12)
   expect_equal(lb$p.value, pchisq(lb.ref, lag, lower.tail = FALSE),
-               tolerance = 2e-15)
+               tolerance = 1e-12)
   expect_identical(unname(bp$parameter), lag)
 })
 

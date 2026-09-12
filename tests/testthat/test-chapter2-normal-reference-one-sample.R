@@ -371,7 +371,7 @@ test_that("invalid inputs and trace degeneracy fail without repair", {
   helmert <- sweep(helmert, 2L, sqrt(colSums(helmert^2)), "/")
   expect_error(
     zhang_zhou_guo_one_sample_test(helmert),
-    "trace\\(Sigma\\^2\\) estimate"
+    "trace\\(Sigma\\^[23]\\) estimate"
   )
   expect_error(
     zhang_zhou_guo_one_sample_test(helmert[, 1:4, drop = FALSE]),
