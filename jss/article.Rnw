@@ -11,7 +11,7 @@ suppressWarnings(knitr::render_sweave())
 options(prompt = "R> ", continue = "+  ", width = 70,
   useFancyQuotes = FALSE)
 library("HDElliptical")
-stopifnot(packageVersion("HDElliptical") >= package_version("0.1.0"))
+stopifnot(packageVersion("HDElliptical") == package_version("0.1.3"))
 set.seed(20260814)
 @
 
@@ -697,8 +697,9 @@ not reproduce the many Monte Carlo size/power experiments from its source
 papers. Its reproducibility target is the method implementation itself:
 formula components, software contracts, and numerically stable callable APIs.
 
-At the dated 2026-08-15 Chapter~1--7 release gate, all package-level validation
-targets in Table~\ref{tab:release-snapshot} were satisfied.
+At the final 2026-09-13 version 0.1.3 Chapter~1--7 release gate, all
+package-level validation targets in Table~\ref{tab:release-snapshot} were
+satisfied.
 %
 \begin{table}[t!]
 \centering
@@ -715,14 +716,15 @@ Stable generated-file manifest & 226 \\
 Source-blocked method families & 2 \\ \hline
 \end{tabular}
 \caption{\label{tab:release-snapshot} Audited release snapshot for
-\pkg{HDElliptical} version 0.1.0.}
+\pkg{HDElliptical} version 0.1.3.}
 \end{table}
 %
-A fresh Windows source build, all examples, both vignettes, and all tests
-completed successfully. The final \code{R CMD check --no-manual} had zero
-errors and warnings; its single note was the conservative DLL symbol scan for
-\code{_exit}, \code{abort}, and \code{exit}, which the checker states may come
-from linked libraries rather than an actual call.
+A fresh source build of version 0.1.3 completed all examples, both vignettes,
+and all 6,267 runtime assertions with zero errors, warnings, failures, or
+skips. CRAN published version 0.1.3 on 2026-09-14. On the CRAN check page
+retrieved 2026-09-18, all 13 listed results were OK: 12 reported version 0.1.3
+and one cached result still reported version 0.1.2. The page listed no
+Additional issues.
 
 \subsection{Deterministic chapter benchmarks} \label{sec:benchmarks}
 
@@ -767,7 +769,7 @@ correctness.
 
 \section{Summary and discussion} \label{sec:summary}
 
-\pkg{HDElliptical} version 0.1.0 turns a broad literature on elliptical
+\pkg{HDElliptical} version 0.1.3 turns a broad literature on elliptical
 high-dimensional analysis into a traceable software system spanning seven book
 chapters. The central design decisions are a shared directional foundation,
 explicit calibration metadata, compiled kernels for computational bottlenecks,
@@ -784,8 +786,13 @@ implemented with explicit paper, software-contract, and provenance layers.
 The results in this article were obtained using
 \proglang{R}~\Sexpr{as.character(getRversion())} and
 \pkg{HDElliptical}~\Sexpr{packageVersion("HDElliptical")}.
-\proglang{R} and contributed packages are available from the Comprehensive
-\proglang{R} Archive Network at \url{https://CRAN.R-project.org/}.
+\pkg{HDElliptical} is available from the Comprehensive \proglang{R} Archive
+Network at \url{https://CRAN.R-project.org/package=HDElliptical} and can be
+installed with \code{install.packages("HDElliptical")}. The archival package
+record is identified by
+\url{https://doi.org/10.32614/CRAN.package.HDElliptical}; development source
+and the issue tracker are hosted at
+\url{https://github.com/flnankai/HDElliptical}.
 
 \bibliography{refs}
 

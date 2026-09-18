@@ -2,15 +2,18 @@
 
 This directory contains the submission-ready source for the
 *Journal of Statistical Software* manuscript accompanying
-`HDElliptical` version 0.1.0. The article covers the implemented methods from
-book Chapters 1--7 through representative, executable workflows and a compact
-traceability appendix.
+`HDElliptical` version 0.1.3, published on CRAN on 2026-09-14. The
+canonical package page is
+<https://CRAN.R-project.org/package=HDElliptical>, and the package DOI is
+<https://doi.org/10.32614/CRAN.package.HDElliptical>. The article covers the
+implemented methods from book Chapters 1--7 through representative, executable
+workflows and a compact traceability appendix.
 
 ## Scope and reproducibility
 
 The audited release exposes 176 interfaces and 140 registered native `.Call`
 routines, documented by 223 Rd topics. Its 56 test files contain 688 named
-test blocks, and all 6,267 runtime assertions passed at the dated 2026-08-15
+test blocks, and all 6,267 runtime assertions passed at the dated 2026-09-13
 release gate. Two fresh generation passes produced the same 226-file manifest.
 The manuscript examples use fixed small inputs or fixed local seeds. They do
 not reproduce paper-specific Monte Carlo size/power grids, benchmark tables,
@@ -47,11 +50,12 @@ GPL-compatible MIT license stated in `DESCRIPTION` and `LICENSE`.
 
 ## Build
 
-Install the package from the parent directory, then run from this directory in
-a clean R session:
+Install the exact CRAN release (or the package from the parent directory), then
+run from this directory in a clean R session:
 
 ```r
-stopifnot(packageVersion("HDElliptical") >= package_version("0.1.0"))
+install.packages("HDElliptical", repos = "https://cloud.r-project.org")
+stopifnot(packageVersion("HDElliptical") == package_version("0.1.3"))
 knitr::knit("article.Rnw", output = "article.tex")
 knitr::purl(
   "article.Rnw", output = "replication.R", documentation = 2

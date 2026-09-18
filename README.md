@@ -1,10 +1,14 @@
 # HDElliptical
 
 `HDElliptical` is the companion R package for *High-Dimensional Data Analysis
-for Elliptically Symmetric Distributions*. Version 0.1.2 implements Chapters
+for Elliptically Symmetric Distributions*. Version 0.1.3 implements Chapters
 1--7, with Rcpp/RcppArmadillo kernels for the computationally intensive
 parts and direct links between the book, the source papers, the public API,
 and regression tests.
+
+The current release is available from
+[CRAN](https://CRAN.R-project.org/package=HDElliptical) with package DOI
+[10.32614/CRAN.package.HDElliptical](https://doi.org/10.32614/CRAN.package.HDElliptical).
 
 ## Current status
 
@@ -130,21 +134,17 @@ are 688 named `test_that` blocks and 5,781 static `expect_*` calls; the isolated
 installed-package run reported 6,267 passes and zero failures, errors, warnings,
 or skips. Two independent generation passes produced the same 226-file hash
 manifest, and all 226 generated files matched the synchronized release tree.
-The final 0.1.0 source tarball built from this release state completed both
-release checks. Standard `R CMD check --no-manual` reported 0 ERROR, 0 WARNING,
-and 1 NOTE; remote-enabled `R CMD check --as-cran --no-manual` reported
-0 ERROR, 0 WARNING, and 2 NOTEs. Both ran examples, tests, and vignettes; the
-as-CRAN run also executed `donttest` examples. Both checks share the conservative
-Windows DLL scan for linked `_exit`, `abort`, and `exit` symbols; an exact
-direct-call scan of the R and `src/` sources found zero calls. The additional
-as-CRAN NOTE identifies this as a new CRAN submission.
+The final 0.1.3 source tarball built from this release state passed the local
+release gate and was published on CRAN on 2026-09-14. By 2026-09-18, all 13
+reported CRAN platform configurations were OK; 12 had refreshed to 0.1.3 and
+one still displayed a cached 0.1.2 result. The 0.1.3 portability changes cover
+Linux ARM64 numerical-boundary fixtures and platforms without extended-precision
+intermediates. The Windows DLL scan for linked `_exit`, `abort`, and `exit`
+symbols and the direct-call scan of the R and `src/` sources found zero calls.
 
-The public repository and issue tracker were bootstrapped on 2026-08-16 and
-now resolve at `https://github.com/flnankai/HDElliptical`. The final as-CRAN
-run kept incoming remote checks enabled and completed without errors or
-warnings. The annotated `v0.1.0` tag and GitHub release were created only after
-the Windows, macOS, and Linux Actions jobs passed and the post-bootstrap
-tarball, check logs, and SHA-256 manifest were regenerated.
+The public repository and issue tracker resolve at
+`https://github.com/flnankai/HDElliptical`. The annotated `v0.1.3` tag and
+GitHub release accompany the exact CRAN source tarball.
 
 The normative method ledger has 87 rows: 83 implemented, 2 review-only, and 2
 source-blocked. The two blocked rows are the Chapter 2 structured-correlation
@@ -167,8 +167,11 @@ simulation, size/power, or empirical-reproduction studies.
 ## Installation
 
 ```r
-# Current GitHub version:
-remotes::install_github("flnankai/HDElliptical")
+# Current CRAN release:
+install.packages("HDElliptical")
+
+# The matching GitHub release:
+remotes::install_github("flnankai/HDElliptical@v0.1.3")
 ```
 
 For a local checkout:
